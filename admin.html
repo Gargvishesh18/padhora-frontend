@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Padhora Admin — Pending Listings</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --violet: #3D2B7D; --coral: #FF5F4E; --mint: #4FCB8B;
+    --sand: #FBF7EE; --ink: #1A1730; --slate: #6B6584; --line: rgba(61,43,125,0.12); --card: #FFFFFF;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--sand); font-family: 'Inter', sans-serif; color: var(--ink); padding: 32px 20px; }
+  .wrap { max-width: 780px; margin: 0 auto; }
+  h1 { font-family: 'Fraunces', serif; font-size: 28px; margin-bottom: 6px; }
+  .sub { color: var(--slate); font-size: 14px; margin-bottom: 28px; }
+
+  .gate { background: var(--card); border-radius: 16px; padding: 28px; max-width: 380px; margin: 60px auto; box-shadow: 0 10px 30px rgba(37,26,82,0.1); }
+  .gate label { font-size: 13px; font-weight: 700; color: var(--violet); display: block; margin-bottom: 8px; }
+  .gate input { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1.5px solid var(--line); font-size: 14px; margin-bottom: 14px; }
+  .gate button { width: 100%; background: var(--violet); color: white; border: none; padding: 13px; border-radius: 10px; font-weight: 700; cursor: pointer; }
+  .gate .err { color: var(--coral); font-size: 13px; margin-top: 10px; display: none; }
+
+  .card { background: var(--card); border: 1.5px solid var(--line); border-radius: 16px; padding: 22px; margin-bottom: 16px; }
+  .card-top { display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px; }
+  .card h3 { font-family: 'Fraunces', serif; font-size: 19px; }
+  .meta { font-size: 13px; color: var(--slate); margin-bottom: 10px; }
+  .tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .tag { font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: 999px; background: rgba(79,203,139,0.14); color: #2C8A5F; }
+  .bio { font-size: 13px; color: var(--ink); margin-bottom: 14px; line-height: 1.5; }
+  .price { font-family: 'Space Mono', monospace; font-weight: 700; color: var(--violet); font-size: 14px; }
+  .actions { display: flex; gap: 10px; margin-top: 14px; }
+  .btn { flex: 1; padding: 11px; border-radius: 10px; border: none; font-weight: 700; font-size: 13px; cursor: pointer; }
+  .approve { background: var(--mint); color: white; }
+  .reject { background: #F4E6E4; color: var(--coral); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .empty { text-align: center; color: var(--slate); padding: 60px 20px; font-size: 14px; }
+  .refresh { background: none; border: 1.5px solid var(--line); padding: 8px 16px; border-radius: 999px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--violet); margin-bottom: 20px; }
+</style>
+</head>
+<body>
+
+<div id="gate-screen" class="gate">
+  <label>Admin key</label>
+  <input type="password" id="admin-key-input" placeholder="Enter admin key">
+  <button onclick="unlock()">Unlock</button>
+  <div class="err" id="gate-err">Incorrect key or couldn't reach the server.</div>
+</div>
+
+<div class="wrap" id="admin-screen" style="display:none;">
+  <h1>Pending listings</h1>
+  <div class="sub">Review and approve tutor submissions before they go live.</div>
+  <button class="refresh" onclick="loadPending()">↻ Refresh</button>
+  <div id="list"></div>
+</div>
+
+<script>
+const API_BASE_URL = "https://padhora-backend-production.up.railway.app";
+let adminKey = "";
+
+function unlock() {
+  adminKey = document.getElementById('admin-key-input').value;
+  loadPending(true);
+}
+
+async function loadPending(isFirstLoad = false) {
+  const errEl = document.getElementById('gate-err');
+  errEl.style.display = 'none';
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/tutors/admin/pending`, {
+      headers: { 'X-Admin-Key': adminKey }
+    });
+    if (res.status === 401) {
+      if (isFirstLoad) { errEl.style.display = 'block'; }
+      return;
+    }
+    if (!res.ok) throw new Error('Failed to load');
+    const listings = await res.json();
+
+    document.getElementById('gate-screen').style.display = 'none';
+    document.getElementById('admin-screen').style.display = 'block';
+    render(listings);
+  } catch (err) {
+    errEl.textContent = "Couldn't reach the server. Try again.";
+    errEl.style.display = 'block';
+  }
+}
+
+function render(listings) {
+  const listEl = document.getElementById('list');
+  if (listings.length === 0) {
+    listEl.innerHTML = `<div class="empty">No pending listings right now.</div>`;
+    return;
+  }
+  listEl.innerHTML = listings.map(t => `
+    <div class="card" id="card-${t.id}">
+      <div class="card-top">
+        <h3>${t.name}</h3>
+        <div class="price">${t.price ? '₹' + t.price + (t.priceUnit || '') : ''}</div>
+      </div>
+      <div class="meta">${t.area || ''} · ${t.mode || ''} · ${t.grade || ''} ${t.yearsExperience ? '· ' + t.yearsExperience + ' yrs exp' : ''}</div>
+      <div class="meta">📞 ${t.phone || ''}</div>
+      <div class="tag-row">${(t.types || []).map(ty => `<span class="tag">${ty}</span>`).join('')}</div>
+      ${t.bio ? `<div class="bio">${t.bio}</div>` : ''}
+      <div class="actions">
+        <button class="btn approve" onclick="act(${t.id}, 'approve')">Approve</button>
+        <button class="btn reject" onclick="act(${t.id}, 'reject')">Reject</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function act(id, action) {
+  const card = document.getElementById(`card-${id}`);
+  const buttons = card.querySelectorAll('button');
+  buttons.forEach(b => b.disabled = true);
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/tutors/admin/${id}/${action}`, {
+      method: 'PATCH',
+      headers: { 'X-Admin-Key': adminKey }
+    });
+    if (!res.ok) throw new Error('Action failed');
+    card.style.opacity = '0.4';
+    setTimeout(() => card.remove(), 300);
+  } catch (err) {
+    buttons.forEach(b => b.disabled = false);
+    alert('Something went wrong. Try again.');
+  }
+}
+</script>
+
+</body>
+</html>

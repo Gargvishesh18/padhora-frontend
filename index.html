@@ -259,6 +259,32 @@
   .modal-actions { display: flex; gap: 10px; margin-top: 22px; }
   .modal-actions .wa-btn { flex: 1; text-align: center; padding: 13px; }
 
+  /* LISTING FORM */
+  .form-field { margin-bottom: 14px; }
+  .form-field label { display: block; font-size: 13px; font-weight: 700; color: var(--violet); margin-bottom: 6px; }
+  .form-field input, .form-field select, .form-field textarea {
+    width: 100%; font-family: 'Inter', sans-serif; font-size: 14px; padding: 12px 14px;
+    border-radius: 12px; border: 1.5px solid var(--line); background: #F9F8FF; color: var(--ink);
+  }
+  .form-field textarea { resize: vertical; min-height: 70px; }
+  .form-field input:focus, .form-field select:focus, .form-field textarea:focus { outline: 2px solid var(--violet); }
+  .form-row { display: flex; gap: 10px; }
+  .form-row .form-field { flex: 1; }
+  .checkbox-group { display: flex; flex-wrap: wrap; gap: 8px; }
+  .checkbox-chip { font-size: 12px; font-weight: 600; padding: 7px 12px; border-radius: 999px; border: 1.5px solid var(--line); cursor: pointer; color: var(--slate); user-select: none; }
+  .checkbox-chip.checked { background: var(--violet); color: white; border-color: var(--violet); }
+  .submit-btn {
+    width: 100%; background: var(--coral); color: white; border: none; font-weight: 700; font-size: 15px;
+    padding: 14px; border-radius: 14px; cursor: pointer; margin-top: 8px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .submit-btn:hover { transform: scale(1.02); box-shadow: 0 10px 22px rgba(255,95,78,0.35); }
+  .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
+  .form-note { font-size: 12px; color: var(--slate); margin-top: 10px; text-align: center; }
+  .form-success { text-align: center; padding: 20px 0; }
+  .form-success .icon { font-size: 40px; margin-bottom: 10px; }
+  .form-error { font-size: 13px; color: var(--coral); margin-top: 6px; }
+
   @media (max-width: 640px) {
     nav .nav-links { display: none; }
     .how-steps { grid-template-columns: 1fr; }
@@ -382,10 +408,11 @@
   <section class="tutor-cta" id="list">
     <h2>Teach at home? Get listed.</h2>
     <p>List your services free and reach parents actively looking for exactly what you offer.</p>
-    <a href="#">List your tuition — it's free</a>
+    <a href="#" onclick="openListingForm(); return false;">List your tuition — it's free</a>
   </section>
 
   <div class="modal-backdrop" id="modal-backdrop"><div class="modal" id="modal-content"></div></div>
+  <div class="modal-backdrop" id="listing-backdrop"><div class="modal" id="listing-content"></div></div>
 
   <footer>
     <div>Padhora — Padho Aur Badho. Piloting in Tricity.</div>
@@ -442,20 +469,6 @@ function render(list) {
     grid.appendChild(card);
   });
   countEl.textContent = `${list.length} listed`;
-}
-
-function applyFilters() {
-  const typeSel = document.getElementById('f-type').value;
-  const type = typeSel === 'Others' ? document.getElementById('f-type-other').value : (typeSel || activeType);
-  const areaSel = document.getElementById('f-area').value;
-  const area = areaSel === 'Others' ? document.getElementById('f-area-other').value : areaSel;
-  const mode = document.getElementById('f-mode').value;
-  const filtered = tutors.filter(t =>
-    (!type || t.types.includes(type) || (typeSel === 'Others' && type)) &&
-    (!area || t.area === area || (areaSel === 'Others' && area)) &&
-    (!mode || t.mode === mode)
-  );
-  render(filtered);
 }
 
 function toggleOther(selectId, otherInputId) {
@@ -537,6 +550,175 @@ heroSection.addEventListener('mousemove', (e) => {
   blob1.style.transform = `translate(${x}px, ${y}px)`;
   blob2.style.transform = `translate(${-x}px, ${-y}px)`;
 });
+
+/* ============================================
+   BACKEND WIRING
+   Set this to your deployed Railway URL once live,
+   e.g. "https://padhora-backend-production.up.railway.app"
+   Leave blank ('') to keep using the mock data above.
+   ============================================ */
+const API_BASE_URL = "https://padhora-backend-production.up.railway.app";
+
+async function loadTutorsFromApi(filters = {}) {
+  if (!API_BASE_URL) return null; // no backend configured yet - caller falls back to mock data
+  try {
+    const params = new URLSearchParams();
+    if (filters.area) params.set('area', filters.area);
+    if (filters.mode) params.set('mode', filters.mode);
+    if (filters.type) params.set('type', filters.type);
+    const res = await fetch(`${API_BASE_URL}/api/tutors?${params.toString()}`);
+    if (!res.ok) throw new Error('API error');
+    return await res.json();
+  } catch (err) {
+    console.warn('Padhora API unreachable, using demo data instead:', err);
+    return null;
+  }
+}
+
+/* Rewriting applyFilters to try the real API, falling back to local mock filtering */
+async function applyFilters() {
+  const typeSel = document.getElementById('f-type').value;
+  const type = typeSel === 'Others' ? document.getElementById('f-type-other').value : (typeSel || activeType);
+  const areaSel = document.getElementById('f-area').value;
+  const area = areaSel === 'Others' ? document.getElementById('f-area-other').value : areaSel;
+  const mode = document.getElementById('f-mode').value;
+
+  const apiResult = await loadTutorsFromApi({ area, mode, type });
+  if (apiResult) { render(apiResult); return; }
+
+  const filtered = tutors.filter(t =>
+    (!type || t.types.includes(type) || (typeSel === 'Others' && type)) &&
+    (!area || t.area === area || (areaSel === 'Others' && area)) &&
+    (!mode || t.mode === mode)
+  );
+  render(filtered);
+}
+
+/* ============================================
+   LISTING FORM
+   ============================================ */
+const listingBackdrop = document.getElementById('listing-backdrop');
+const listingContent = document.getElementById('listing-content');
+const ALL_TYPES = ["Recurring Monthly", "Admission Prep", "Holiday Homework", "Writing Improvement", "Exam Prep", "Subject-Specific"];
+let selectedTypes = [];
+
+function openListingForm() {
+  selectedTypes = [];
+  listingContent.innerHTML = `
+    <button class="modal-close" onclick="closeListingForm()" aria-label="Close">×</button>
+    <h3>List your tuition</h3>
+    <p style="font-size:13px;color:var(--slate);margin:8px 0 18px;">Free to list. We'll review before it goes live.</p>
+    <form id="listing-form">
+      <div class="form-field"><label>Your name</label><input type="text" id="lf-name" required></div>
+      <div class="form-field"><label>Phone (WhatsApp)</label><input type="tel" id="lf-phone" required></div>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Area</label>
+          <select id="lf-area" required>
+            <option value="">Select</option>
+            <option>Mohali</option><option>Chandigarh</option><option>Panchkula</option><option>Other</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Where do you teach?</label>
+          <select id="lf-mode" required>
+            <option value="">Select</option>
+            <option>At tutor's home</option><option>Tutor comes to you</option><option>Online</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Type of help you offer (select all that apply)</label>
+        <div class="checkbox-group" id="lf-types">
+          ${ALL_TYPES.map(t => `<div class="checkbox-chip" data-type="${t}" onclick="toggleTypeChip(this)">${t}</div>`).join('')}
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field"><label>Grade(s) you teach</label><input type="text" id="lf-grade" placeholder="e.g. Class 3 - Class 5"></div>
+        <div class="form-field"><label>Years of experience</label><input type="number" id="lf-years" min="0"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-field"><label>Price</label><input type="number" id="lf-price" placeholder="1000"></div>
+        <div class="form-field"><label>Per</label><input type="text" id="lf-unit" placeholder="/month"></div>
+      </div>
+      <div class="form-field"><label>Short bio</label><textarea id="lf-bio" placeholder="What do you teach, where, and what makes your tuition useful?"></textarea></div>
+      <div id="lf-error" class="form-error" style="display:none;"></div>
+      <button type="submit" class="submit-btn" id="lf-submit">List my tuition</button>
+      <div class="form-note">Your number is only shown to parents who view your listing.</div>
+    </form>
+  `;
+  document.getElementById('listing-form').addEventListener('submit', submitListing);
+  listingBackdrop.classList.add('open');
+}
+function closeListingForm() { listingBackdrop.classList.remove('open'); }
+listingBackdrop.addEventListener('click', (e) => { if (e.target === listingBackdrop) closeListingForm(); });
+
+function toggleTypeChip(el) {
+  const type = el.dataset.type;
+  el.classList.toggle('checked');
+  if (selectedTypes.includes(type)) selectedTypes = selectedTypes.filter(t => t !== type);
+  else selectedTypes.push(type);
+}
+
+async function submitListing(e) {
+  e.preventDefault();
+  const errorEl = document.getElementById('lf-error');
+  errorEl.style.display = 'none';
+
+  if (selectedTypes.length === 0) {
+    errorEl.textContent = 'Please select at least one type of help you offer.';
+    errorEl.style.display = 'block';
+    return;
+  }
+
+  const payload = {
+    name: document.getElementById('lf-name').value,
+    phone: document.getElementById('lf-phone').value,
+    area: document.getElementById('lf-area').value,
+    mode: document.getElementById('lf-mode').value,
+    types: selectedTypes,
+    grade: document.getElementById('lf-grade').value,
+    yearsExperience: parseInt(document.getElementById('lf-years').value) || null,
+    price: parseInt(document.getElementById('lf-price').value) || null,
+    priceUnit: document.getElementById('lf-unit').value,
+    bio: document.getElementById('lf-bio').value
+  };
+
+  const btn = document.getElementById('lf-submit');
+  btn.disabled = true; btn.textContent = 'Submitting...';
+
+  if (!API_BASE_URL) {
+    // No backend wired up yet - simulate success so the flow can be reviewed end-to-end
+    await new Promise(r => setTimeout(r, 500));
+    showListingSuccess();
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/tutors`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Submit failed');
+    showListingSuccess();
+  } catch (err) {
+    errorEl.textContent = "Something went wrong submitting your listing. Please try again.";
+    errorEl.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'List my tuition';
+  }
+}
+
+function showListingSuccess() {
+  listingContent.innerHTML = `
+    <button class="modal-close" onclick="closeListingForm()" aria-label="Close">×</button>
+    <div class="form-success">
+      <div class="icon">✅</div>
+      <h3>Listing submitted</h3>
+      <p style="color:var(--slate);font-size:14px;margin-top:8px;">We'll review it and it'll go live shortly. Thanks for joining Padhora!</p>
+    </div>
+  `;
+}
 
 render(tutors);
 </script>

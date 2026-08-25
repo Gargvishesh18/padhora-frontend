@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Padhora — Find trusted tutors in Tricity</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;0,9..144,900;1,9..144,500&family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --violet: #3D2B7D;
+    --violet-deep: #251A52;
+    --coral: #FF5F4E;
+    --mint: #4FCB8B;
+    --sand: #FBF7EE;
+    --ink: #1A1730;
+    --slate: #6B6584;
+    --line: rgba(61,43,125,0.12);
+    --card: #FFFFFF;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--sand);
+    font-family: 'Inter', sans-serif;
+    color: var(--ink);
+    overflow-x: hidden;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  }
+
+  a { color: inherit; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; position: relative; }
+
+  /* NAV */
+  nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 22px 0; position: relative; z-index: 10;
+  }
+  .logo {
+    font-family: 'Fraunces', serif; font-weight: 800; font-size: 26px; letter-spacing: -0.5px; line-height: 1;
+  }
+  .logo .tagline { font-family: 'Space Mono', monospace; font-size: 10px; font-weight: 400; letter-spacing: 0.5px; color: var(--slate); margin-top: 3px; }
+  .logo .dot { color: var(--coral); }
+  nav .nav-links { display: flex; gap: 32px; font-size: 15px; font-weight: 600; }
+  nav .nav-links a {
+    text-decoration: none; color: var(--violet); position: relative; padding-bottom: 4px;
+  }
+  nav .nav-links a::after {
+    content: ''; position: absolute; left: 0; bottom: 0; width: 0; height: 2px;
+    background: var(--coral); transition: width 0.25s cubic-bezier(.4,0,.2,1);
+  }
+  nav .nav-links a:hover::after { width: 100%; }
+  .list-btn {
+    background: var(--violet); color: var(--sand);
+    padding: 11px 22px; border-radius: 999px; text-decoration: none;
+    font-weight: 700; font-size: 14px;
+    transition: transform 0.2s cubic-bezier(.34,1.56,.64,1), box-shadow 0.2s ease;
+    display: inline-block;
+  }
+  .list-btn:hover { transform: translateY(-3px) scale(1.03); box-shadow: 0 10px 24px rgba(61,43,125,0.35); }
+
+  /* HERO */
+  .hero { padding: 64px 0 40px; position: relative; }
+  .blob {
+    position: absolute; border-radius: 50%; filter: blur(60px); opacity: 0.35; z-index: 0;
+    pointer-events: none; transition: transform 0.3s ease-out;
+  }
+  .blob1 { width: 380px; height: 380px; background: var(--coral); top: -120px; right: -80px; }
+  .blob2 { width: 300px; height: 300px; background: var(--mint); bottom: -60px; left: -100px; opacity: 0.25; }
+
+  .hero-inner { position: relative; z-index: 1; }
+  .eyebrow {
+    font-family: 'Space Mono', monospace; font-size: 13px; color: var(--violet);
+    letter-spacing: 1px; margin-bottom: 20px; display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(61,43,125,0.08); padding: 7px 14px; border-radius: 999px;
+  }
+  .eyebrow .pulse {
+    width: 7px; height: 7px; border-radius: 50%; background: var(--mint); display: inline-block;
+    animation: pulse 1.8s infinite;
+  }
+  @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(79,203,139,0.5); } 50% { box-shadow: 0 0 0 6px rgba(79,203,139,0); } }
+
+  h1.headline {
+    font-family: 'Fraunces', serif; font-weight: 700; font-size: clamp(38px, 6vw, 64px);
+    line-height: 1.05; letter-spacing: -1.5px; max-width: 820px;
+  }
+  h1.headline .grad {
+    background: linear-gradient(100deg, var(--violet), var(--coral) 60%, var(--violet));
+    background-size: 200% auto;
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    animation: shine 5s linear infinite;
+  }
+  @keyframes shine { to { background-position: 200% center; } }
+
+  .sub { margin-top: 12px; font-size: 18px; color: var(--slate); max-width: 560px; line-height: 1.55; }
+  .tagline-sub { font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; font-size: 20px; color: var(--coral); margin-top: 14px; }
+
+  /* SEARCH BOX */
+  .search-card {
+    margin-top: 32px; background: var(--card); border-radius: 20px; padding: 12px;
+    max-width: 820px; box-shadow: 0 20px 50px rgba(37,26,82,0.15); position: relative;
+  }
+  .search-row-main { display: flex; gap: 8px; flex-wrap: wrap; }
+  .search-card select, .search-card input {
+    font-family: 'Inter', sans-serif; font-size: 14px; padding: 14px 16px; border-radius: 14px;
+    border: none; background: #F4F1FF; color: var(--ink); flex: 1 1 140px;
+  }
+  .other-row { margin-top: 8px; }
+  .other-row input { width: 100%; }
+  .search-card select:focus, .search-card input:focus { outline: 2px solid var(--violet); }
+  .search-card button {
+    background: var(--coral); border: none; color: white; font-weight: 700; font-size: 14px;
+    padding: 14px 26px; border-radius: 14px; cursor: pointer; flex: 0 0 auto;
+    transition: transform 0.15s cubic-bezier(.34,1.56,.64,1), box-shadow 0.15s ease;
+  }
+  .search-card button:hover { transform: scale(1.05); box-shadow: 0 8px 20px rgba(255,95,78,0.4); }
+  .search-card button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--violet); outline-offset: 2px; }
+
+  /* CATEGORY CHIPS */
+  .chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+  .chip {
+    font-size: 13px; font-weight: 700; padding: 9px 16px; border-radius: 999px;
+    border: 1.5px solid var(--line); background: var(--card); color: var(--slate); cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .chip:hover { border-color: var(--violet); color: var(--violet); transform: translateY(-2px); }
+  .chip.active { background: var(--violet); color: white; border-color: var(--violet); }
+
+  /* TRUST BAR */
+  .trust-bar {
+    display: flex; flex-wrap: wrap; gap: 32px; padding: 32px 0; margin-top: 16px;
+    border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+  }
+  .trust-item { flex: 1 1 120px; }
+  .trust-num { font-family: 'Space Mono', monospace; font-size: 30px; font-weight: 700; color: var(--violet); }
+  .trust-num .star { color: var(--coral); font-size: 20px; }
+  .trust-label { font-size: 13px; color: var(--slate); margin-top: 2px; }
+
+  /* SECTION HEADER */
+  .section { padding: 64px 0; position: relative; z-index: 1; }
+  .section-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 30px; }
+  .section-head h2 { font-family: 'Fraunces', serif; font-weight: 700; font-size: 30px; letter-spacing: -0.5px; }
+  .count { font-family: 'Space Mono', monospace; font-size: 13px; color: var(--slate); }
+
+  /* TUTOR GRID */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(255px, 1fr)); gap: 22px; }
+  .card {
+    background: var(--card); border: 1.5px solid var(--line); border-radius: 18px; padding: 22px;
+    position: relative; cursor: pointer;
+    transition: transform 0.25s cubic-bezier(.2,.8,.2,1), box-shadow 0.25s ease, border-color 0.25s ease;
+  }
+  .card:hover {
+    transform: translateY(-8px) rotate(-0.5deg);
+    box-shadow: 0 18px 34px rgba(37,26,82,0.18);
+    border-color: var(--violet);
+  }
+  .card::before {
+    content: ''; position: absolute; inset: 0; border-radius: 18px; padding: 1.5px;
+    background: linear-gradient(135deg, var(--coral), var(--mint));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    opacity: 0; transition: opacity 0.25s ease; pointer-events: none;
+  }
+  .card:hover::before { opacity: 1; }
+
+  .avatar-wrap { position: relative; width: 56px; height: 56px; margin-bottom: 14px; }
+  .avatar {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--violet), var(--violet-deep)); color: var(--sand);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Fraunces', serif; font-weight: 700; font-size: 20px;
+    transition: transform 0.25s cubic-bezier(.34,1.56,.64,1);
+  }
+  .card:hover .avatar { transform: rotate(-8deg) scale(1.05); }
+  .stamp { position: absolute; top: -10px; right: -14px; width: 32px; height: 32px; transition: transform 0.3s cubic-bezier(.34,1.56,.64,1); }
+  .card:hover .stamp { transform: rotate(12deg) scale(1.1); }
+
+  .card h3 { font-family: 'Fraunces', serif; font-size: 19px; font-weight: 700; margin-bottom: 4px; }
+  .card .area { font-size: 13px; color: var(--slate); margin-bottom: 10px; }
+  .rating-row { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--slate); margin-bottom: 12px; }
+  .rating-row .stars { color: var(--coral); letter-spacing: 1px; }
+  .rating-row .rcount { font-family: 'Space Mono', monospace; font-size: 12px; }
+  .tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+  .tag { font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: 999px; background: rgba(79,203,139,0.14); color: #2C8A5F; }
+  .tag.mode-tag { background: rgba(61,43,125,0.1); color: var(--violet); }
+  .card-footer { display: flex; align-items: center; justify-content: space-between; border-top: 1px dashed var(--line); padding-top: 14px; }
+  .price { font-family: 'Space Mono', monospace; font-size: 15px; font-weight: 700; color: var(--violet); }
+  .price span { color: var(--slate); font-size: 12px; font-weight: 400; }
+  .wa-btn {
+    background: var(--mint); color: white; text-decoration: none; font-size: 13px; font-weight: 700;
+    padding: 9px 16px; border-radius: 999px; transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .wa-btn:hover { transform: scale(1.06); box-shadow: 0 6px 16px rgba(79,203,139,0.45); }
+
+  /* HOW IT WORKS */
+  .how { background: linear-gradient(135deg, var(--violet), var(--violet-deep)); color: var(--sand); border-radius: 24px; padding: 52px 44px; margin: 24px 0; position: relative; overflow: hidden; }
+  .how::after { content: ''; position: absolute; width: 260px; height: 260px; background: var(--coral); opacity: 0.25; border-radius: 50%; filter: blur(50px); top: -80px; right: -60px; }
+  .how h2 { font-family: 'Fraunces', serif; font-size: 30px; margin-bottom: 36px; position: relative; }
+  .how-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; position: relative; }
+  .how-steps .step { transition: transform 0.25s ease; }
+  .how-steps .step:hover { transform: translateY(-6px); }
+  .how-steps .step .num { font-family: 'Space Mono', monospace; color: var(--coral); font-size: 13px; margin-bottom: 10px; }
+  .how-steps .step h4 { font-size: 18px; margin-bottom: 8px; font-weight: 700; }
+  .how-steps .step p { font-size: 14px; color: #C9C2E8; line-height: 1.55; }
+
+  /* TESTIMONIALS */
+  .testi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px,1fr)); gap: 20px; }
+  .testi-card { background: var(--card); border: 1.5px solid var(--line); border-radius: 18px; padding: 24px; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  .testi-card:hover { transform: translateY(-6px); box-shadow: 0 16px 30px rgba(37,26,82,0.14); }
+  .testi-stars { color: var(--coral); letter-spacing: 2px; margin-bottom: 12px; font-size: 15px; }
+  .testi-card p { font-family: 'Fraunces', serif; font-style: italic; font-size: 15px; line-height: 1.55; color: var(--ink); margin-bottom: 14px; }
+  .testi-name { font-size: 12px; color: var(--slate); }
+
+  /* FAQ */
+  .faq-list { max-width: 720px; }
+  .faq-item { border-bottom: 1px solid var(--line); }
+  .faq-q {
+    width: 100%; text-align: left; background: none; border: none;
+    font-family: 'Fraunces', serif; font-size: 17px; font-weight: 700; color: var(--ink);
+    padding: 20px 0; cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+  }
+  .faq-q span { color: var(--coral); font-size: 22px; transition: transform 0.25s cubic-bezier(.34,1.56,.64,1); }
+  .faq-q[aria-expanded="true"] span { transform: rotate(45deg); }
+  .faq-a { max-height: 0; overflow: hidden; font-size: 14px; color: var(--slate); line-height: 1.6; transition: max-height 0.25s ease; }
+  .faq-a.open { max-height: 200px; padding-bottom: 20px; }
+
+  /* CTA */
+  .tutor-cta { text-align: center; padding: 64px 20px; }
+  .tutor-cta h2 { font-family: 'Fraunces', serif; font-size: 32px; margin-bottom: 12px; }
+  .tutor-cta p { color: var(--slate); max-width: 480px; margin: 0 auto 26px; }
+  .tutor-cta a {
+    display: inline-block; background: var(--coral); color: white; text-decoration: none;
+    font-weight: 700; padding: 16px 34px; border-radius: 999px;
+    transition: transform 0.2s cubic-bezier(.34,1.56,.64,1), box-shadow 0.2s ease;
+  }
+  .tutor-cta a:hover { transform: translateY(-4px) scale(1.03); box-shadow: 0 14px 28px rgba(255,95,78,0.4); }
+
+  footer { border-top: 1.5px solid var(--line); padding: 30px 0; font-size: 13px; color: var(--slate); display: flex; justify-content: space-between; }
+
+  /* MODAL */
+  .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(26,23,48,0.55); backdrop-filter: blur(3px); align-items: center; justify-content: center; padding: 20px; z-index: 50; }
+  .modal-backdrop.open { display: flex; }
+  .modal { background: var(--sand); border-radius: 22px; max-width: 480px; width: 100%; padding: 34px; position: relative; max-height: 85vh; overflow-y: auto; animation: modalIn 0.25s cubic-bezier(.2,.9,.3,1); }
+  @keyframes modalIn { from { opacity: 0; transform: translateY(16px) scale(0.97); } to { opacity: 1; transform: none; } }
+  .modal-close { position: absolute; top: 18px; right: 18px; background: #F4F1FF; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 18px; cursor: pointer; color: var(--violet); }
+  .modal-close:hover { background: var(--violet); color: white; }
+  .modal .avatar-wrap { width: 64px; height: 64px; }
+  .modal .avatar { width: 64px; height: 64px; font-size: 22px; }
+  .modal h3 { font-family: 'Fraunces', serif; font-size: 23px; margin: 14px 0 4px; }
+  .modal .modal-bio { font-size: 14px; color: var(--slate); line-height: 1.6; margin: 14px 0; }
+  .modal .modal-reviews { border-top: 1px dashed var(--line); padding-top: 16px; margin-top: 16px; }
+  .modal .modal-reviews h4 { font-family: 'Fraunces', serif; font-size: 15px; margin-bottom: 10px; }
+  .mini-review { font-size: 13px; color: var(--slate); margin-bottom: 10px; padding-left: 12px; border-left: 3px solid var(--coral); }
+  .modal-actions { display: flex; gap: 10px; margin-top: 22px; }
+  .modal-actions .wa-btn { flex: 1; text-align: center; padding: 13px; }
+
+  @media (max-width: 640px) {
+    nav .nav-links { display: none; }
+    .how-steps { grid-template-columns: 1fr; }
+    .search-card { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <nav>
+    <div class="logo">Padhora<span class="dot">.</span><div class="tagline">Padho Aur Badho</div></div>
+    <div class="nav-links">
+      <a href="#browse">Find a tutor</a>
+      <a href="#how">How it works</a>
+      <a href="#list">List your tuition</a>
+    </div>
+    <a href="#list" class="list-btn">List your tuition</a>
+  </nav>
+
+  <section class="hero">
+    <div class="blob blob1" id="blob1"></div>
+    <div class="blob blob2" id="blob2"></div>
+    <div class="hero-inner">
+      <div class="eyebrow"><span class="pulse"></span>NOW PILOTING IN TRICITY</div>
+      <h1 class="headline">Find a tutor your kid actually <span class="grad">clicks with.</span></h1>
+      <p class="tagline-sub">Padho Aur Badho.</p>
+      <p class="sub">Any grade, any subject, any kind of help — admission prep, monthly homework support, holiday catch-up, or exam-focused coaching. Browse real, verified tutors, at home or online.</p>
+
+      <div class="search-card">
+        <div class="search-row-main">
+          <select id="f-type" onchange="toggleOther('f-type','f-type-other')">
+            <option value="">Type of help</option>
+            <option>Recurring Monthly</option>
+            <option>Admission Prep</option>
+            <option>Holiday Homework</option>
+            <option>Writing Improvement</option>
+            <option>Exam Prep</option>
+            <option>Subject-Specific</option>
+            <option value="Others">Others — tell us</option>
+          </select>
+          <select id="f-area" onchange="toggleOther('f-area','f-area-other')">
+            <option value="">Area</option>
+            <option>Mohali</option>
+            <option>Chandigarh</option>
+            <option>Panchkula</option>
+            <option value="Others">Others — tell us</option>
+          </select>
+          <select id="f-mode">
+            <option value="">Where?</option>
+            <option>At tutor's home</option>
+            <option>Tutor comes to you</option>
+            <option>Online</option>
+          </select>
+          <button onclick="applyFilters()">Search tutors</button>
+        </div>
+        <div class="other-row" id="f-type-other-wrap" style="display:none;">
+          <input type="text" id="f-type-other" placeholder="What kind of help are you looking for?">
+        </div>
+        <div class="other-row" id="f-area-other-wrap" style="display:none;">
+          <input type="text" id="f-area-other" placeholder="Your area / locality">
+        </div>
+      </div>
+
+      <div class="chips" id="chips">
+        <div class="chip active" data-type="">All</div>
+        <div class="chip" data-type="Recurring Monthly">Recurring Monthly</div>
+        <div class="chip" data-type="Admission Prep">Admission Prep</div>
+        <div class="chip" data-type="Holiday Homework">Holiday Homework</div>
+        <div class="chip" data-type="Writing Improvement">Writing Improvement</div>
+        <div class="chip" data-type="Exam Prep">Exam Prep</div>
+        <div class="chip" data-type="Subject-Specific">Subject-Specific</div>
+      </div>
+    </div>
+
+    <div class="trust-bar">
+      <div class="trust-item"><div class="trust-num" data-count="120">0</div><div class="trust-label">Verified tutors</div></div>
+      <div class="trust-item"><div class="trust-num" data-count="340">0</div><div class="trust-label">Parents connected</div></div>
+      <div class="trust-item"><div class="trust-num"><span data-count="4.8" data-decimal="1">0</span><span class="star">★</span></div><div class="trust-label">Avg. parent rating</div></div>
+      <div class="trust-item"><div class="trust-num"><span data-count="100">0</span>%</div><div class="trust-label">Listings ID-checked</div></div>
+    </div>
+  </section>
+
+  <section class="section" id="browse">
+    <div class="section-head">
+      <h2>Tutors near you</h2>
+      <div class="count" id="result-count">6 listed</div>
+    </div>
+    <div class="grid" id="tutor-grid"></div>
+  </section>
+
+  <section class="section" id="how">
+    <div class="how">
+      <h2>How Padhora works</h2>
+      <div class="how-steps">
+        <div class="step"><div class="num">01</div><h4>Tell us what's needed</h4><p>Pick the type of help — not just a subject — and your area in Tricity.</p></div>
+        <div class="step"><div class="num">02</div><h4>Browse verified tutors</h4><p>Every listing is ID-checked before it goes live. No cold ads, no fake profiles.</p></div>
+        <div class="step"><div class="num">03</div><h4>Message directly</h4><p>Reach out over WhatsApp — no middleman, no booking fee.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="testimonials">
+    <div class="section-head"><h2>What parents say</h2></div>
+    <div class="testi-grid">
+      <div class="testi-card"><div class="testi-stars">★★★★★</div><p>"Found a writing tutor for my daughter within a day. She messaged back within the hour."</p><div class="testi-name">— Kavita, Mohali</div></div>
+      <div class="testi-card"><div class="testi-stars">★★★★★</div><p>"I could see exactly who does admission prep instead of messaging ten random tutors."</p><div class="testi-name">— Rajesh, Chandigarh</div></div>
+      <div class="testi-card"><div class="testi-stars">★★★★☆</div><p>"The verified badge meant something — ID and experience checked before I reached out."</p><div class="testi-name">— Simran, Panchkula</div></div>
+    </div>
+  </section>
+
+  <section class="section" id="faq">
+    <div class="section-head"><h2>Before you message a tutor</h2></div>
+    <div class="faq-list">
+      <div class="faq-item"><button class="faq-q">What does "Verified" actually mean? <span>+</span></button><div class="faq-a">Every tutor's phone number and government ID are checked before their listing goes live. Always have an introductory call before the first session.</div></div>
+      <div class="faq-item"><button class="faq-q">Is there a fee to contact a tutor? <span>+</span></button><div class="faq-a">No. Padhora doesn't charge parents or take a cut of tuition fees. You message tutors directly on WhatsApp.</div></div>
+      <div class="faq-item"><button class="faq-q">How are ratings collected? <span>+</span></button><div class="faq-a">After a tuition period ends, parents who connected through Padhora can leave a rating and short review, shown on the tutor's profile.</div></div>
+    </div>
+  </section>
+
+  <section class="tutor-cta" id="list">
+    <h2>Teach at home? Get listed.</h2>
+    <p>List your services free and reach parents actively looking for exactly what you offer.</p>
+    <a href="#">List your tuition — it's free</a>
+  </section>
+
+  <div class="modal-backdrop" id="modal-backdrop"><div class="modal" id="modal-content"></div></div>
+
+  <footer>
+    <div>Padhora — Padho Aur Badho. Piloting in Tricity.</div>
+    <div>Currently onboarding tutors in Mohali, Chandigarh & Panchkula</div>
+  </footer>
+</div>
+
+<script>
+const tutors = [
+  { name: "Ritu Sharma", area: "Mohali", types: ["Recurring Monthly", "Writing Improvement"], mode: "At tutor's home", price: 1000, unit: "/month", grade: "Pre-nursery – Class 2", rating: 4.9, reviews: 22, years: 6,
+    bio: "Teaches at home in Phase 5, Mohali. Focuses on handwriting and daily homework support for early learners.",
+    testimonials: ["\"My son's handwriting improved so much in 2 months.\" — Anita", "\"Very patient with young kids.\" — Rohit"] },
+  { name: "Anil Kumar", area: "Chandigarh", types: ["Admission Prep"], mode: "Tutor comes to you", price: 3500, unit: "/10-day batch", grade: "Class 1 – Class 2", rating: 4.7, reviews: 15, years: 9,
+    bio: "Runs a focused 10-day admission prep batch in Sector 40 — interview prep, basic reading and numeracy.",
+    testimonials: ["\"Got my daughter into her first-choice school.\" — Manpreet"] },
+  { name: "Simran Kaur", area: "Panchkula", types: ["Holiday Homework"], mode: "Tutor comes to you", price: 1800, unit: "/holiday batch", grade: "Class 1 – Class 4", rating: 4.6, reviews: 11, years: 4,
+    bio: "Holiday-only batches to finish summer/winter break homework without last-minute stress.",
+    testimonials: ["\"Finished all pending homework before school reopened.\" — Puneet"] },
+  { name: "Deepak Verma", area: "Mohali", types: ["Exam Prep", "Subject-Specific"], mode: "Online", price: 1800, unit: "/month", grade: "Class 9 – Class 10", rating: 4.8, reviews: 19, years: 7,
+    bio: "Board exam-focused Math and Science tuition for Class 9-10, based in Sector 70, Mohali.",
+    testimonials: ["\"Reliable, never misses a session, boosted her Math score.\" — Harpreet"] },
+  { name: "Neha Gill", area: "Chandigarh", types: ["Writing Improvement"], mode: "At tutor's home", price: 900, unit: "/month", grade: "Pre-nursery – Class 1", rating: 4.9, reviews: 27, years: 5,
+    bio: "Specialises in early handwriting and phonics for pre-nursery to Class 1 kids.",
+    testimonials: ["\"Best for early writing skills.\" — Divya"] },
+  { name: "Priya Mehta", area: "Mohali", types: ["Subject-Specific", "Recurring Monthly"], mode: "Tutor comes to you", price: 1600, unit: "/month", grade: "Class 6 – Class 8", rating: 4.5, reviews: 9, years: 3,
+    bio: "Middle-school Science and English support, plus ongoing monthly homework help.",
+    testimonials: ["\"Explained tricky science topics really simply.\" — Karan"] }
+];
+
+const grid = document.getElementById('tutor-grid');
+const countEl = document.getElementById('result-count');
+let activeType = "";
+
+function initials(name) { return name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase(); }
+function stampSVG() { return `<svg class="stamp" viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="none" stroke="#FF5F4E" stroke-width="2" stroke-dasharray="2 3"/><path d="M12 20 L17 26 L28 13" fill="none" stroke="#FF5F4E" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>`; }
+function starString(rating) { const full = Math.round(rating); return '★'.repeat(full) + '☆'.repeat(5 - full); }
+
+function render(list) {
+  grid.innerHTML = '';
+  list.forEach(t => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="avatar-wrap"><div class="avatar">${initials(t.name)}</div>${stampSVG()}</div>
+      <h3>${t.name}</h3>
+      <div class="area">${t.area} · ${t.grade}</div>
+      <div class="rating-row"><span class="stars">${starString(t.rating)}</span> ${t.rating} <span class="rcount">(${t.reviews} reviews)</span></div>
+      <div class="tag-row"><span class="tag mode-tag">${t.mode}</span>${t.types.map(ty => `<span class="tag">${ty}</span>`).join('')}</div>
+      <div class="card-footer">
+        <div class="price">₹${t.price}<span> ${t.unit}</span></div>
+        <a class="wa-btn" href="#" onclick="event.stopPropagation(); return false;">WhatsApp</a>
+      </div>`;
+    card.addEventListener('click', () => openModal(t));
+    grid.appendChild(card);
+  });
+  countEl.textContent = `${list.length} listed`;
+}
+
+function applyFilters() {
+  const typeSel = document.getElementById('f-type').value;
+  const type = typeSel === 'Others' ? document.getElementById('f-type-other').value : (typeSel || activeType);
+  const areaSel = document.getElementById('f-area').value;
+  const area = areaSel === 'Others' ? document.getElementById('f-area-other').value : areaSel;
+  const mode = document.getElementById('f-mode').value;
+  const filtered = tutors.filter(t =>
+    (!type || t.types.includes(type) || (typeSel === 'Others' && type)) &&
+    (!area || t.area === area || (areaSel === 'Others' && area)) &&
+    (!mode || t.mode === mode)
+  );
+  render(filtered);
+}
+
+function toggleOther(selectId, otherInputId) {
+  const val = document.getElementById(selectId).value;
+  document.getElementById(otherInputId + '-wrap').style.display = (val === 'Others') ? 'block' : 'none';
+}
+
+document.querySelectorAll('.chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    activeType = chip.dataset.type;
+    document.getElementById('f-type').value = activeType;
+    applyFilters();
+  });
+});
+
+/* MODAL */
+const backdrop = document.getElementById('modal-backdrop');
+const modalContent = document.getElementById('modal-content');
+function openModal(t) {
+  modalContent.innerHTML = `
+    <button class="modal-close" onclick="closeModal()" aria-label="Close">×</button>
+    <div class="avatar-wrap"><div class="avatar">${initials(t.name)}</div>${stampSVG()}</div>
+    <h3>${t.name}</h3>
+    <div class="area">${t.area} · ${t.grade} · ${t.years} yrs experience</div>
+    <div class="rating-row"><span class="stars">${starString(t.rating)}</span> ${t.rating} <span class="rcount">(${t.reviews} reviews)</span></div>
+    <div class="tag-row"><span class="tag mode-tag">${t.mode}</span>${t.types.map(ty => `<span class="tag">${ty}</span>`).join('')}</div>
+    <p class="modal-bio">${t.bio}</p>
+    <div class="modal-reviews"><h4>What parents say</h4>${t.testimonials.map(r => `<div class="mini-review">${r}</div>`).join('')}</div>
+    <div class="modal-actions"><a class="wa-btn" href="#" onclick="return false;">Message on WhatsApp</a></div>`;
+  backdrop.classList.add('open');
+}
+function closeModal() { backdrop.classList.remove('open'); }
+backdrop.addEventListener('click', (e) => { if (e.target === backdrop) closeModal(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+
+/* FAQ accordion */
+document.querySelectorAll('.faq-q').forEach(btn => {
+  btn.setAttribute('aria-expanded', 'false');
+  btn.addEventListener('click', () => {
+    const answer = btn.nextElementSibling;
+    const isOpen = answer.classList.toggle('open');
+    btn.setAttribute('aria-expanded', isOpen);
+  });
+});
+
+/* Count-up trust numbers */
+function animateCount(el) {
+  const target = parseFloat(el.dataset.count);
+  const decimals = el.dataset.decimal ? parseInt(el.dataset.decimal) : 0;
+  const dur = 1200; const start = performance.now();
+  function tick(now) {
+    const p = Math.min((now - start) / dur, 1);
+    const eased = 1 - Math.pow(1 - p, 3);
+    el.textContent = (target * eased).toFixed(decimals);
+    if (p < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+const countObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const nodes = entry.target.hasAttribute('data-count') ? [entry.target] : entry.target.querySelectorAll('[data-count]');
+      nodes.forEach(animateCount);
+      countObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.4 });
+document.querySelectorAll('.trust-num').forEach(el => countObserver.observe(el));
+
+/* Parallax blobs on mouse move */
+const heroSection = document.querySelector('.hero');
+const blob1 = document.getElementById('blob1');
+const blob2 = document.getElementById('blob2');
+heroSection.addEventListener('mousemove', (e) => {
+  const x = (e.clientX / window.innerWidth - 0.5) * 40;
+  const y = (e.clientY / window.innerHeight - 0.5) * 40;
+  blob1.style.transform = `translate(${x}px, ${y}px)`;
+  blob2.style.transform = `translate(${-x}px, ${-y}px)`;
+});
+
+render(tutors);
+</script>
+
+</body>
+</html>

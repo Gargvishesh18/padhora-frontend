@@ -470,9 +470,8 @@ function gradeDisplay(t) {
 }
 function priceDisplay(t) {
   if (t.priceType === 'Custom quote') return 'Contact for quote';
-  const prefix = t.priceType === 'Starting from' ? 'From ' : '';
   if (!t.price) return t.priceType || '';
-  return `${prefix}₹${t.price}${t.priceUnit || t.unit || ''}`;
+  return `₹${t.price}${t.priceUnit || t.unit || ''}`;
 }
 
 function render(list) {
@@ -524,6 +523,8 @@ function openModal(t) {
     <div class="area">${t.area} · ${gradeDisplay(t)}${years ? ' · ' + years + ' yrs experience' : ''}</div>
     ${t.qualification ? `<div class="area">${t.qualification}</div>` : ''}
     ${t.languages && t.languages.length ? `<div class="area">Teaches in: ${t.languages.join(', ')}</div>` : ''}
+    ${t.batchType ? `<div class="area">${t.batchType}${t.trialAvailable ? ' · Trial class available' : ''}</div>` : ''}
+    ${t.preferredTimings && t.preferredTimings.length ? `<div class="area">Available: ${t.preferredTimings.join(', ')}</div>` : ''}
     <div class="rating-row"><span class="stars">${starString(t.rating || 0)}</span> ${t.rating || ''} <span class="rcount">${t.reviews ? '(' + t.reviews + ' reviews)' : ''}</span></div>
     <div class="tag-row"><span class="tag mode-tag">${modesDisplay(t)}</span>${(t.types || []).map(ty => `<span class="tag">${ty}</span>`).join('')}</div>
     <p class="modal-bio">${t.bio || ''}</p>
@@ -635,12 +636,20 @@ const ALL_LANGUAGES = ["Hindi", "English", "Punjabi", "Others"];
 let selectedTypes = [];
 let selectedModes = [];
 let selectedLanguages = [];
+let selectedTimings = [];
+let selectedPriceType = '';
+let selectedBatchType = '';
+let selectedTrial = '';
 let gradeSubjectRowCount = 0;
 
 function openListingForm() {
   selectedTypes = [];
   selectedModes = [];
   selectedLanguages = [];
+  selectedTimings = [];
+  selectedPriceType = '';
+  selectedBatchType = '';
+  selectedTrial = '';
   gradeSubjectRowCount = 0;
   listingContent.innerHTML = `
     <button class="modal-close" onclick="closeListingForm()" aria-label="Close">×</button>
@@ -701,15 +710,39 @@ function openListingForm() {
 
       <div class="form-field">
         <label>Pricing</label>
-        <div class="price-type-group">
-          <label class="radio-chip"><input type="radio" name="price-type" value="Fixed" checked onchange="updatePriceFields()"> Fixed price</label>
-          <label class="radio-chip"><input type="radio" name="price-type" value="Starting from" onchange="updatePriceFields()"> Starting from</label>
-          <label class="radio-chip"><input type="radio" name="price-type" value="Custom quote" onchange="updatePriceFields()"> Custom quote — contact to discuss</label>
+        <div class="checkbox-group" id="lf-pricetype">
+          <div class="checkbox-chip price-chip" data-price="Per month" onclick="selectPriceType(this)">Per month</div>
+          <div class="checkbox-chip price-chip" data-price="Per session" onclick="selectPriceType(this)">Per session</div>
+          <div class="checkbox-chip price-chip" data-price="Per batch" onclick="selectPriceType(this)">Per batch</div>
+          <div class="checkbox-chip price-chip" data-price="Custom quote" onclick="selectPriceType(this)">Custom — contact for quote</div>
         </div>
-        <p style="font-size:12px;color:var(--slate);margin:8px 0;">If your price changes depending on which subjects a parent picks, use "Starting from" or "Custom quote" instead of a fixed number.</p>
-        <div class="form-row" id="price-number-row">
-          <div class="form-field"><label>Price</label><input type="number" id="lf-price" placeholder="1000"></div>
-          <div class="form-field"><label>Per</label><input type="text" id="lf-unit" placeholder="/month"></div>
+        <div class="form-field" id="price-number-row" style="margin-top:10px;display:none;">
+          <label id="price-number-label">Price</label>
+          <input type="number" id="lf-price" placeholder="1000">
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label>Batch type</label>
+        <div class="checkbox-group" id="lf-batchtype">
+          <div class="checkbox-chip" data-batch="One-on-one" onclick="selectBatchType(this)">One-on-one</div>
+          <div class="checkbox-chip" data-batch="Group batches" onclick="selectBatchType(this)">Group batches</div>
+          <div class="checkbox-chip" data-batch="Both" onclick="selectBatchType(this)">Both</div>
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label>Do you offer a trial class?</label>
+        <div class="checkbox-group" id="lf-trial">
+          <div class="checkbox-chip" data-trial="true" onclick="selectTrial(this)">Yes</div>
+          <div class="checkbox-chip" data-trial="false" onclick="selectTrial(this)">No</div>
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label>Preferred timing</label>
+        <div class="checkbox-group" id="lf-timing">
+          ${["Morning", "Afternoon", "Evening", "Flexible"].map(t => `<div class="checkbox-chip" data-timing="${t}" onclick="toggleChip(this, 'timings')">${t}</div>`).join('')}
         </div>
       </div>
 
@@ -733,11 +766,11 @@ listingBackdrop.addEventListener('click', (e) => { if (e.target === listingBackd
 
 function toggleChip(el, group) {
   el.classList.toggle('checked');
-  const map = { types: () => selectedTypes, modes: () => selectedModes, languages: () => selectedLanguages };
+  const map = { types: () => selectedTypes, modes: () => selectedModes, languages: () => selectedLanguages, timings: () => selectedTimings };
   const setMap = {
-    types: (v) => selectedTypes = v, modes: (v) => selectedModes = v, languages: (v) => selectedLanguages = v
+    types: (v) => selectedTypes = v, modes: (v) => selectedModes = v, languages: (v) => selectedLanguages = v, timings: (v) => selectedTimings = v
   };
-  const key = group === 'types' ? el.dataset.type : group === 'modes' ? el.dataset.mode : el.dataset.lang;
+  const key = group === 'types' ? el.dataset.type : group === 'modes' ? el.dataset.mode : group === 'languages' ? el.dataset.lang : el.dataset.timing;
   let current = map[group]();
   if (current.includes(key)) current = current.filter(v => v !== key);
   else current.push(key);
@@ -749,6 +782,32 @@ function toggleChip(el, group) {
   if (group === 'languages') {
     document.getElementById('lf-lang-other').style.display = selectedLanguages.includes('Others') ? 'block' : 'none';
   }
+}
+
+function selectPriceType(el) {
+  document.querySelectorAll('.price-chip').forEach(c => c.classList.remove('checked'));
+  el.classList.add('checked');
+  selectedPriceType = el.dataset.price;
+  const row = document.getElementById('price-number-row');
+  const label = document.getElementById('price-number-label');
+  if (selectedPriceType === 'Custom quote') {
+    row.style.display = 'none';
+  } else {
+    row.style.display = 'block';
+    label.textContent = `Price (${selectedPriceType.toLowerCase()})`;
+  }
+}
+
+function selectBatchType(el) {
+  document.querySelectorAll('#lf-batchtype .checkbox-chip').forEach(c => c.classList.remove('checked'));
+  el.classList.add('checked');
+  selectedBatchType = el.dataset.batch;
+}
+
+function selectTrial(el) {
+  document.querySelectorAll('#lf-trial .checkbox-chip').forEach(c => c.classList.remove('checked'));
+  el.classList.add('checked');
+  selectedTrial = el.dataset.trial;
 }
 
 function addGradeSubjectRow() {
@@ -766,11 +825,6 @@ function addGradeSubjectRow() {
   container.appendChild(row);
 }
 
-function updatePriceFields() {
-  const type = document.querySelector('input[name="price-type"]:checked').value;
-  document.getElementById('price-number-row').style.display = (type === 'Custom quote') ? 'none' : 'flex';
-}
-
 async function submitListing(e) {
   e.preventDefault();
   const errorEl = document.getElementById('lf-error');
@@ -783,6 +837,11 @@ async function submitListing(e) {
   }
   if (selectedModes.length === 0) {
     errorEl.textContent = 'Please select at least one option for where you teach.';
+    errorEl.style.display = 'block';
+    return;
+  }
+  if (!selectedPriceType) {
+    errorEl.textContent = 'Please select how you price your tuition.';
     errorEl.style.display = 'block';
     return;
   }
@@ -804,7 +863,7 @@ async function submitListing(e) {
     subjects: row.querySelector('.gs-subjects').value
   })).filter(gs => gs.grade || gs.subjects);
 
-  const priceType = document.querySelector('input[name="price-type"]:checked').value;
+  const priceUnitMap = { 'Per month': '/month', 'Per session': '/session', 'Per batch': '/batch' };
 
   const payload = {
     name: document.getElementById('lf-name').value,
@@ -817,9 +876,12 @@ async function submitListing(e) {
     qualification: document.getElementById('lf-qualification').value,
     languages: languages,
     yearsExperience: parseInt(document.getElementById('lf-years').value) || null,
-    priceType: priceType,
-    price: priceType === 'Custom quote' ? null : (parseInt(document.getElementById('lf-price').value) || null),
-    priceUnit: priceType === 'Custom quote' ? null : document.getElementById('lf-unit').value,
+    priceType: selectedPriceType,
+    price: selectedPriceType === 'Custom quote' ? null : (parseInt(document.getElementById('lf-price').value) || null),
+    priceUnit: priceUnitMap[selectedPriceType] || null,
+    batchType: selectedBatchType,
+    trialAvailable: selectedTrial === 'true' ? true : (selectedTrial === 'false' ? false : null),
+    preferredTimings: selectedTimings,
     bio: document.getElementById('lf-bio').value
   };
 

@@ -315,7 +315,13 @@
 </style>
 </head>
 <body>
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD1pLH2YEvlEYV228wcHQnjD4J_gF_Wotw&libraries=places" async defer></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD1pLH2YEvlEYV228wcHQnjD4J_gF_Wotw&libraries=places&callback=onGoogleMapsReady" async defer></script>
+<script>
+  window.onGoogleMapsReady = function() {
+    window.__googleMapsReady = true;
+    if (typeof initSearchLocalityAutocomplete === 'function') initSearchLocalityAutocomplete();
+  };
+</script>
 
 <div class="wrap">
   <nav>

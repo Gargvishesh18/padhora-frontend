@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Padhora — Find trusted tutors in Tricity</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:ital,wght@0,400;0,500;0,600;0,700;0,800;1,600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:ital,wght@0,400;0,500;0,600;0,700;0,800;1,600&family=Kalam:wght@400;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --violet: #2E6DA4;
@@ -22,6 +22,19 @@
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; overflow-x: hidden; width: 100%; }
+
+  .scroll-track {
+    position: fixed; top: 0; left: 14px; width: 4px; height: 100vh; z-index: 200;
+    background: repeating-linear-gradient(to bottom, #D3DEE6 0, #D3DEE6 6px, transparent 6px, transparent 12px);
+    border-radius: 4px; pointer-events: none;
+  }
+  .scroll-fill {
+    position: absolute; top: 0; left: 0; width: 100%; height: 0%;
+    background: linear-gradient(to bottom, #F2994A, #E36B8A, #2E6DA4);
+    border-radius: 4px;
+  }
+  .scroll-pencil { position: absolute; left: -10px; top: 0; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.25)); }
+  @media (max-width: 900px) { .scroll-track { display: none; } }
 
   body {
     background-color: var(--sand);
@@ -234,54 +247,69 @@
   .count { font-family: 'Space Mono', monospace; font-size: 13px; color: var(--slate); }
 
   /* TUTOR GRID */
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(255px, 1fr)); gap: 22px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(255px, 1fr)); gap: 28px; }
   .card {
-    background: var(--card); border: 1.5px solid var(--line); border-radius: 18px; padding: 22px;
-    position: relative; cursor: pointer;
-    transition: transform 0.25s cubic-bezier(.2,.8,.2,1), box-shadow 0.25s ease, border-color 0.25s ease;
+    background-color: #2E4A3D;
+    background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 5px 5px;
+    border-radius: 18px;
+    border: 1px solid rgba(255,255,255,0.08);
+    padding: 22px 20px 16px; position: relative; cursor: pointer;
+    box-shadow: 0 10px 22px rgba(20,40,30,0.25);
+    transition: transform 0.25s cubic-bezier(.2,.8,.2,1), box-shadow 0.25s ease;
   }
   .card:hover {
-    transform: translateY(-8px) rotate(-0.5deg);
-    box-shadow: 0 18px 34px rgba(37,26,82,0.18);
-    border-color: var(--violet);
+    transform: translateY(-6px);
+    box-shadow: 0 16px 30px rgba(20,40,30,0.32);
+    border-color: rgba(255,255,255,0.18);
   }
-  .card::before {
-    content: ''; position: absolute; inset: 0; border-radius: 18px; padding: 1.5px;
-    background: linear-gradient(135deg, var(--coral), var(--mint));
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor; mask-composite: exclude;
-    opacity: 0; transition: opacity 0.25s ease; pointer-events: none;
+  .card-tray {
+    display: flex; gap: 6px; justify-content: center; margin-top: 12px; padding-top: 10px;
+    border-top: 1px dashed rgba(255,255,255,0.12);
   }
-  .card:hover::before { opacity: 1; }
+  .card-tray span { width: 16px; height: 5px; border-radius: 3px; }
+  .card-tray span:nth-child(1) { background: #F5F0E6; }
+  .card-tray span:nth-child(2) { background: #F2C94C; }
+  .card-tray span:nth-child(3) { background: #EC8AA5; }
 
-  .avatar-wrap { position: relative; width: 56px; height: 56px; margin-bottom: 14px; }
+  .avatar-wrap { position: relative; width: 52px; height: 52px; margin-bottom: 12px; }
   .avatar {
-    width: 56px; height: 56px; border-radius: 50%;
-    background: linear-gradient(135deg, var(--violet), var(--violet-deep)); color: var(--sand);
+    width: 52px; height: 52px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--coral), #F7B978); color: white;
     display: flex; align-items: center; justify-content: center;
-    font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 20px;
+    font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 18px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.25);
     transition: transform 0.25s cubic-bezier(.34,1.56,.64,1);
   }
   .card:hover .avatar { transform: rotate(-8deg) scale(1.05); }
   .stamp { position: absolute; top: -10px; right: -14px; width: 32px; height: 32px; transition: transform 0.3s cubic-bezier(.34,1.56,.64,1); }
   .card:hover .stamp { transform: rotate(12deg) scale(1.1); }
 
-  .card h3 { font-family: 'Fredoka', sans-serif; font-size: 19px; font-weight: 700; margin-bottom: 4px; }
-  .card .area { font-size: 13px; color: var(--slate); margin-bottom: 10px; }
+  .card h3 { font-family: 'Fredoka', sans-serif; font-size: 18px; font-weight: 700; margin-bottom: 4px; color: #F5F5F0; }
+  .card .area { font-size: 13px; color: #C8D3CB; margin-bottom: 10px; }
   .rating-row { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--slate); margin-bottom: 12px; }
   .rating-row .stars { color: var(--coral); letter-spacing: 1px; }
   .rating-row .rcount { font-family: 'Space Mono', monospace; font-size: 12px; }
+  .card .rating-row { color: #C8D3CB; }
+  .card .rating-row .stars { color: #F2C94C; }
   .tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
   .tag { font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: 999px; background: rgba(79,203,139,0.14); color: #2C8A5F; }
-  .tag.mode-tag { background: rgba(61,43,125,0.1); color: var(--violet); }
+  .tag.mode-tag { background: rgba(46,109,164,0.12); color: var(--violet); }
+  .card .tag { background: rgba(255,255,255,0.14); color: #EAF4EA; }
+  .card .tag.mode-tag { background: rgba(242,153,74,0.25); color: #FFD9A6; }
   .card-footer { display: flex; align-items: center; justify-content: space-between; border-top: 1px dashed var(--line); padding-top: 14px; }
   .price { font-family: 'Space Mono', monospace; font-size: 15px; font-weight: 700; color: var(--violet); }
   .price span { color: var(--slate); font-size: 12px; font-weight: 400; }
+  .card .card-footer { border-top-color: rgba(255,255,255,0.15); }
+  .card .price { color: #F2C94C; }
+  .card .price span { color: #C8D3CB; }
   .wa-btn {
     background: var(--mint); color: white; text-decoration: none; font-size: 13px; font-weight: 700;
     padding: 9px 16px; border-radius: 999px; transition: transform 0.15s ease, box-shadow 0.15s ease;
   }
   .wa-btn:hover { transform: scale(1.06); box-shadow: 0 6px 16px rgba(79,203,139,0.45); }
+  .card .wa-btn { background: var(--coral); }
+  .card .wa-btn:hover { box-shadow: 0 6px 16px rgba(242,153,74,0.5); }
 
   /* HOW IT WORKS */
   .how { background: linear-gradient(135deg, var(--violet), var(--violet-deep)); color: var(--sand); border-radius: 24px; padding: 52px 44px; margin: 24px 0; position: relative; overflow: hidden; }
@@ -290,7 +318,8 @@
   .how-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; position: relative; }
   .how-steps .step { transition: transform 0.25s ease; }
   .how-steps .step:hover { transform: translateY(-6px); }
-  .how-steps .step .num { font-family: 'Space Mono', monospace; color: var(--coral); font-size: 13px; margin-bottom: 10px; }
+  .step-icon { margin-bottom: 14px; transition: transform 0.4s cubic-bezier(.34,1.56,.64,1); }
+  .how-steps .step:hover .step-icon { transform: rotate(-10deg) scale(1.12); }
   .how-steps .step h4 { font-size: 18px; margin-bottom: 8px; font-weight: 700; }
   .how-steps .step p { font-size: 14px; color: #C9C2E8; line-height: 1.55; }
 
@@ -367,6 +396,7 @@
   .cta-blob1 { width: 260px; height: 260px; background: var(--coral); opacity: 0.35; top: -80px; left: -60px; }
   .cta-blob2 { width: 220px; height: 220px; background: var(--mint); opacity: 0.25; bottom: -80px; right: -40px; }
   .cta-inner { position: relative; z-index: 1; }
+  .cta-apple { margin-bottom: 14px; animation: floatCard 4s ease-in-out infinite; }
   .cta-eyebrow {
     font-family: 'Space Mono', monospace; font-size: 12px; letter-spacing: 1.5px; color: #FFD9A6;
     background: rgba(255,255,255,0.12); display: inline-block; padding: 6px 14px; border-radius: 999px; margin-bottom: 18px;
@@ -389,10 +419,16 @@
   .footer-sub { font-size: 12px; color: var(--slate); opacity: 0.8; margin-top: 4px; }
 
   /* MODAL */
-  .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(26,23,48,0.55); backdrop-filter: blur(3px); align-items: center; justify-content: center; padding: 20px; z-index: 50; }
-  .modal-backdrop.open { display: flex; }
-  .modal { background: var(--sand); border-radius: 22px; max-width: 480px; width: 100%; padding: 34px; position: relative; max-height: 85vh; overflow-y: auto; animation: modalIn 0.25s cubic-bezier(.2,.9,.3,1); }
-  @keyframes modalIn { from { opacity: 0; transform: translateY(16px) scale(0.97); } to { opacity: 1; transform: none; } }
+  .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(26,23,48,0.55); backdrop-filter: blur(3px); align-items: center; justify-content: center; padding: 20px; z-index: 50; perspective: 1400px; }
+  .modal-backdrop.open { display: flex; animation: backdropFade 0.2s ease; }
+  @keyframes backdropFade { from { opacity: 0; } to { opacity: 1; } }
+  .modal { background: var(--sand); border-radius: 22px; max-width: 480px; width: 100%; padding: 34px; position: relative; max-height: 85vh; overflow-y: auto; transform-origin: left center; animation: modalIn 0.5s cubic-bezier(.2,.9,.25,1.05); }
+  @keyframes modalIn {
+    0% { opacity: 0; transform: rotateY(-25deg) scale(0.92) translateX(-10px); }
+    100% { opacity: 1; transform: rotateY(0deg) scale(1) translateX(0); }
+  }
+  .modal-item { opacity: 0; animation: modalItemIn 0.4s ease forwards; }
+  @keyframes modalItemIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   .modal-close { position: absolute; top: 18px; right: 18px; background: #EAF4FC; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 18px; cursor: pointer; color: var(--violet); }
   .modal-close:hover { background: var(--violet); color: white; }
   .modal .avatar-wrap { width: 64px; height: 64px; }
@@ -449,6 +485,18 @@
 </style>
 </head>
 <body>
+<div class="scroll-track" id="scroll-track">
+  <div class="scroll-fill" id="scroll-fill"></div>
+  <svg class="scroll-pencil" id="scroll-pencil" viewBox="0 0 64 64" width="24" height="24">
+    <defs><linearGradient id="scrollPencilGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#F7B978"/><stop offset="100%" stop-color="#F2994A"/></linearGradient></defs>
+    <g transform="rotate(45 32 32)">
+      <rect x="26" y="8" width="12" height="38" rx="3" fill="url(#scrollPencilGrad)"/>
+      <polygon points="26,46 38,46 32,58" fill="#4C3A2E"/>
+      <polygon points="29,46 35,46 32,52" fill="#F2C79A"/>
+      <rect x="26" y="8" width="12" height="8" rx="3" fill="#E36B8A"/>
+    </g>
+  </svg>
+</div>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD1pLH2YEvlEYV228wcHQnjD4J_gF_Wotw&libraries=places&callback=onGoogleMapsReady" async defer></script>
 <script>
   window.onGoogleMapsReady = function() {
@@ -679,9 +727,35 @@
     <div class="how">
       <h2>How Padhora works</h2>
       <div class="how-steps">
-        <div class="step"><div class="num">01</div><h4>Tell us what's needed</h4><p>Pick the type of help — not just a subject — and your area in Tricity.</p></div>
-        <div class="step"><div class="num">02</div><h4>Browse verified tutors</h4><p>Every listing is ID-checked before it goes live. No cold ads, no fake profiles.</p></div>
-        <div class="step"><div class="num">03</div><h4>Message directly</h4><p>Reach out over WhatsApp — no middleman, no booking fee.</p></div>
+        <div class="step">
+          <svg class="step-icon" viewBox="0 0 64 64" width="48" height="48">
+            <defs><linearGradient id="bagGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#F7B978"/><stop offset="100%" stop-color="#F2994A"/></linearGradient></defs>
+            <path d="M14 26 C14 20 19 16 26 16 H38 C45 16 50 20 50 26 V48 C50 51 47 54 44 54 H20 C17 54 14 51 14 48 Z" fill="url(#bagGrad)" filter="drop-shadow(0 4px 6px rgba(242,153,74,0.4))"/>
+            <path d="M24 16 V10 C24 7 27 5 32 5 C37 5 40 7 40 10 V16" fill="none" stroke="#4C3A2E" stroke-width="4" stroke-linecap="round"/>
+            <rect x="26" y="30" width="12" height="9" rx="2" fill="#1B4A73"/>
+            <ellipse cx="22" cy="24" rx="6" ry="3" fill="white" opacity="0.25"/>
+          </svg>
+          <h4>Tell us what's needed</h4><p>Pick the type of help — not just a subject — and your area in Tricity.</p>
+        </div>
+        <div class="step">
+          <svg class="step-icon" viewBox="0 0 64 64" width="48" height="48">
+            <defs><linearGradient id="glassGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#4A90C8"/><stop offset="100%" stop-color="#2E6DA4"/></linearGradient></defs>
+            <circle cx="26" cy="26" r="16" fill="none" stroke="url(#glassGrad)" stroke-width="7" filter="drop-shadow(0 4px 6px rgba(46,109,164,0.4))"/>
+            <rect x="37" y="37" width="8" height="20" rx="4" transform="rotate(45 41 47)" fill="#1B4A73"/>
+            <ellipse cx="21" cy="20" rx="5" ry="3" fill="white" opacity="0.4"/>
+            <path d="M20 26 L24 30 L32 20" fill="none" stroke="#6BB98A" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <h4>Browse verified tutors</h4><p>Every listing is ID-checked before it goes live. No cold ads, no fake profiles.</p>
+        </div>
+        <div class="step">
+          <svg class="step-icon" viewBox="0 0 64 64" width="48" height="48">
+            <defs><linearGradient id="planeGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#6BB98A"/><stop offset="100%" stop-color="#4C9A6A"/></linearGradient></defs>
+            <path d="M8 32 L54 10 L38 56 L30 38 L8 32 Z" fill="url(#planeGrad)" filter="drop-shadow(0 4px 6px rgba(76,154,106,0.4))"/>
+            <path d="M8 32 L30 38 L54 10 Z" fill="#6BB98A" opacity="0.6"/>
+            <ellipse cx="20" cy="24" rx="5" ry="2.5" fill="white" opacity="0.3"/>
+          </svg>
+          <h4>Message directly</h4><p>Reach out over WhatsApp — no middleman, no booking fee.</p>
+        </div>
       </div>
     </div>
   </section>
@@ -722,9 +796,9 @@
   <section class="section" id="faq">
     <div class="section-head"><h2>Before you message a tutor</h2></div>
     <div class="faq-list">
-      <div class="faq-item"><button class="faq-q"><span class="faq-icon">?</span>What does "Verified" actually mean? <span class="faq-toggle">+</span></button><div class="faq-a">Every tutor's phone number and government ID are checked before their listing goes live. Always have an introductory call before the first session.</div></div>
-      <div class="faq-item"><button class="faq-q"><span class="faq-icon">?</span>Is there a fee to contact a tutor? <span class="faq-toggle">+</span></button><div class="faq-a">No. Padhora doesn't charge parents or take a cut of tuition fees. You message tutors directly on WhatsApp.</div></div>
-      <div class="faq-item"><button class="faq-q"><span class="faq-icon">?</span>How are ratings collected? <span class="faq-toggle">+</span></button><div class="faq-a">After a tuition period ends, parents who connected through Padhora can leave a rating and short review, shown on the tutor's profile.</div></div>
+      <div class="faq-item"><button class="faq-q"><span class="faq-icon">✏️</span>What does "Verified" actually mean? <span class="faq-toggle">+</span></button><div class="faq-a">Every tutor's phone number and government ID are checked before their listing goes live. Always have an introductory call before the first session.</div></div>
+      <div class="faq-item"><button class="faq-q"><span class="faq-icon">✏️</span>Is there a fee to contact a tutor? <span class="faq-toggle">+</span></button><div class="faq-a">No. Padhora doesn't charge parents or take a cut of tuition fees. You message tutors directly on WhatsApp.</div></div>
+      <div class="faq-item"><button class="faq-q"><span class="faq-icon">✏️</span>How are ratings collected? <span class="faq-toggle">+</span></button><div class="faq-a">After a tuition period ends, parents who connected through Padhora can leave a rating and short review, shown on the tutor's profile.</div></div>
     </div>
   </section>
 
@@ -733,6 +807,13 @@
       <div class="cta-blob cta-blob1"></div>
       <div class="cta-blob cta-blob2"></div>
       <div class="cta-inner">
+        <svg class="cta-apple" viewBox="0 0 64 64" width="52" height="52">
+          <defs><linearGradient id="appleGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#EC8AA5"/><stop offset="100%" stop-color="#E36B8A"/></linearGradient></defs>
+          <path d="M32 22 C20 20 12 28 12 40 C12 50 20 58 28 58 C30 58 31 57 32 57 C33 57 34 58 36 58 C44 58 52 50 52 40 C52 28 44 20 32 22 Z" fill="url(#appleGrad)" filter="drop-shadow(0 4px 6px rgba(227,107,138,0.4))"/>
+          <path d="M32 22 C31 16 34 11 40 9" fill="none" stroke="#4C9A6A" stroke-width="4" stroke-linecap="round"/>
+          <ellipse cx="42" cy="12" rx="7" ry="4" fill="#6BB98A" transform="rotate(-25 42 12)"/>
+          <ellipse cx="22" cy="30" rx="6" ry="3.5" fill="white" opacity="0.3"/>
+        </svg>
         <div class="cta-eyebrow">FOR TUTORS</div>
         <h2>Teach at home? Get listed.</h2>
         <p>List your services free and reach parents actively looking for exactly what you offer.</p>
@@ -823,7 +904,7 @@ function waLink(phone, tutorName) {
 
 function render(list) {
   grid.innerHTML = '';
-  list.forEach(t => {
+  list.forEach((t, i) => {
     const card = document.createElement('div');
     card.className = 'card';
     card.innerHTML = `
@@ -835,7 +916,8 @@ function render(list) {
       <div class="card-footer">
         <div class="price">${priceDisplay(t)}</div>
         <a class="wa-btn" href="${waLink(t.phone, t.name)}" target="_blank" rel="noopener" onclick="event.stopPropagation();">WhatsApp</a>
-      </div>`;
+      </div>
+      <div class="card-tray"><span></span><span></span><span></span></div>`;
     card.addEventListener('click', () => openModal(t));
     grid.appendChild(card);
   });
@@ -881,6 +963,10 @@ function openModal(t) {
     ${testimonials.length ? `<div class="modal-reviews"><h4>What parents say</h4>${testimonials.map(r => `<div class="mini-review">${r}</div>`).join('')}</div>` : ''}
     <div class="modal-actions"><a class="wa-btn" href="${waLink(t.phone, t.name)}" target="_blank" rel="noopener">Message on WhatsApp</a></div>`;
   backdrop.classList.add('open');
+  Array.from(modalContent.children).forEach((el, i) => {
+    el.classList.add('modal-item');
+    el.style.animationDelay = (i * 0.05) + 's';
+  });
 }
 function closeModal() { backdrop.classList.remove('open'); }
 backdrop.addEventListener('click', (e) => { if (e.target === backdrop) closeModal(); });
@@ -1434,6 +1520,25 @@ function showListingSuccess() {
 
 initSearchLocalityAutocomplete();
 applyFilters();
+
+/* Pencil scroll progress */
+(function() {
+  const fill = document.getElementById('scroll-fill');
+  const pencil = document.getElementById('scroll-pencil');
+  if (!fill || !pencil) return;
+  let ticking = false;
+  function updateScrollPencil() {
+    const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const pct = scrollHeight > 0 ? Math.min(1, Math.max(0, window.scrollY / scrollHeight)) : 0;
+    fill.style.height = (pct * 100) + '%';
+    pencil.style.top = (pct * window.innerHeight - 12) + 'px';
+    ticking = false;
+  }
+  window.addEventListener('scroll', () => {
+    if (!ticking) { requestAnimationFrame(updateScrollPencil); ticking = true; }
+  });
+  updateScrollPencil();
+})();
 </script>
 
 </body>

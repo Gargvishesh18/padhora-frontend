@@ -653,7 +653,7 @@
   <section class="section" id="browse">
     <div class="section-head">
       <h2>Tutors near you</h2>
-      <div class="count" id="result-count">6 listed</div>
+      <div class="count" id="result-count">Search to see tutors</div>
     </div>
     <div class="grid" id="tutor-grid"></div>
   </section>
@@ -728,8 +728,8 @@
             <ellipse cx="20" cy="30" rx="7" ry="4" fill="white" opacity="0.2"/>
           </svg>
         </div>
-        <h3>Free for parents, always</h3>
-        <p>Browsing and messaging tutors costs nothing today and won't in future. We don't charge the side that's looking for help.</p>
+        <h3>Zero fees for parents</h3>
+        <p>We never charge parents to find or message tutors. We're exploring how tutors can optionally boost their listings (not a paywall) while keeping the core platform free.</p>
       </div>
     </div>
   </section>
@@ -851,26 +851,8 @@
 </div>
 
 <script>
-const tutors = [
-  { name: "Ritu Sharma", area: "Mohali", types: ["Recurring Monthly", "Writing Improvement"], mode: "At tutor's home", price: 1000, unit: "/month", grade: "Pre-nursery – Class 2", rating: 4.9, reviews: 22, years: 6,
-    bio: "Teaches at home in Phase 5, Mohali. Focuses on handwriting and daily homework support for early learners.",
-    testimonials: ["\"My son's handwriting improved so much in 2 months.\" — Anita", "\"Very patient with young kids.\" — Rohit"] },
-  { name: "Anil Kumar", area: "Chandigarh", types: ["Admission Prep"], mode: "Tutor comes to you", price: 3500, unit: "/10-day batch", grade: "Class 1 – Class 2", rating: 4.7, reviews: 15, years: 9,
-    bio: "Runs a focused 10-day admission prep batch in Sector 40 — interview prep, basic reading and numeracy.",
-    testimonials: ["\"Got my daughter into her first-choice school.\" — Manpreet"] },
-  { name: "Simran Kaur", area: "Panchkula", types: ["Holiday Homework"], mode: "Tutor comes to you", price: 1800, unit: "/holiday batch", grade: "Class 1 – Class 4", rating: 4.6, reviews: 11, years: 4,
-    bio: "Holiday-only batches to finish summer/winter break homework without last-minute stress.",
-    testimonials: ["\"Finished all pending homework before school reopened.\" — Puneet"] },
-  { name: "Deepak Verma", area: "Mohali", types: ["Exam Prep", "Subject-Specific"], mode: "Online", price: 1800, unit: "/month", grade: "Class 9 – Class 10", rating: 4.8, reviews: 19, years: 7,
-    bio: "Board exam-focused Math and Science tuition for Class 9-10, based in Sector 70, Mohali.",
-    testimonials: ["\"Reliable, never misses a session, boosted her Math score.\" — Harpreet"] },
-  { name: "Neha Gill", area: "Chandigarh", types: ["Writing Improvement"], mode: "At tutor's home", price: 900, unit: "/month", grade: "Pre-nursery – Class 1", rating: 4.9, reviews: 27, years: 5,
-    bio: "Specialises in early handwriting and phonics for pre-nursery to Class 1 kids.",
-    testimonials: ["\"Best for early writing skills.\" — Divya"] },
-  { name: "Priya Mehta", area: "Mohali", types: ["Subject-Specific", "Recurring Monthly"], mode: "Tutor comes to you", price: 1600, unit: "/month", grade: "Class 6 – Class 8", rating: 4.5, reviews: 9, years: 3,
-    bio: "Middle-school Science and English support, plus ongoing monthly homework help.",
-    testimonials: ["\"Explained tricky science topics really simply.\" — Karan"] }
-];
+// Fake demo tutors removed
+const tutors = [];
 
 const grid = document.getElementById('tutor-grid');
 const countEl = document.getElementById('result-count');

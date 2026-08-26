@@ -301,6 +301,7 @@
 </style>
 </head>
 <body>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD1pLH2YEvlEYV228wcHQnjD4J_gF_Wotw&libraries=places" async defer></script>
 
 <div class="wrap">
   <nav>
@@ -482,7 +483,7 @@ function render(list) {
     card.innerHTML = `
       <div class="avatar-wrap"><div class="avatar">${initials(t.name)}</div>${stampSVG()}</div>
       <h3>${t.name}</h3>
-      <div class="area">${t.area} · ${gradeDisplay(t)}</div>
+      <div class="area">${t.locality ? t.locality + ', ' : ''}${t.area} · ${gradeDisplay(t)}</div>
       <div class="rating-row"><span class="stars">${starString(t.rating || 0)}</span> ${t.rating || ''} <span class="rcount">${t.reviews ? '(' + t.reviews + ' reviews)' : ''}</span></div>
       <div class="tag-row"><span class="tag mode-tag">${modesDisplay(t)}</span>${(t.types || []).map(ty => `<span class="tag">${ty}</span>`).join('')}</div>
       <div class="card-footer">
@@ -520,7 +521,7 @@ function openModal(t) {
     <button class="modal-close" onclick="closeModal()" aria-label="Close">×</button>
     <div class="avatar-wrap"><div class="avatar">${initials(t.name)}</div>${stampSVG()}</div>
     <h3>${t.name}</h3>
-    <div class="area">${t.area} · ${gradeDisplay(t)}${years ? ' · ' + years + ' yrs experience' : ''}</div>
+    <div class="area">${t.locality ? t.locality + ', ' : ''}${t.area} · ${gradeDisplay(t)}${years ? ' · ' + years + ' yrs experience' : ''}</div>
     ${t.qualification ? `<div class="area">${t.qualification}</div>` : ''}
     ${t.languages && t.languages.length ? `<div class="area">Teaches in: ${t.languages.join(', ')}</div>` : ''}
     ${t.batchType ? `<div class="area">${t.batchType}${t.trialAvailable ? ' · Trial class available' : ''}</div>` : ''}
@@ -670,6 +671,13 @@ function openListingForm() {
       </div>
 
       <div class="form-field">
+        <label>Locality / sector <span style="font-weight:400;color:var(--slate);">(helps parents find tutors actually nearby)</span></label>
+        <input type="text" id="lf-locality" placeholder="Start typing your locality, e.g. Phase 5" autocomplete="off">
+        <input type="hidden" id="lf-lat">
+        <input type="hidden" id="lf-lng">
+      </div>
+
+      <div class="form-field">
         <label>Full address <span style="font-weight:400;color:var(--slate);">(for our verification only — never shown to parents)</span></label>
         <input type="text" id="lf-address" placeholder="House no., street, locality">
       </div>
@@ -758,7 +766,31 @@ function openListingForm() {
     document.getElementById('lf-area-other').style.display = e.target.value === 'Others' ? 'block' : 'none';
   });
   document.getElementById('listing-form').addEventListener('submit', submitListing);
+  initLocalityAutocomplete();
   listingBackdrop.classList.add('open');
+}
+
+function initLocalityAutocomplete() {
+  const input = document.getElementById('lf-locality');
+  if (!input || typeof google === 'undefined' || !google.maps || !google.maps.places) return;
+  // Tricity bounding area for location bias (Mohali/Chandigarh/Panchkula)
+  const tricityBounds = new google.maps.LatLngBounds(
+    new google.maps.LatLng(30.60, 76.60),
+    new google.maps.LatLng(30.85, 76.90)
+  );
+  const autocomplete = new google.maps.places.Autocomplete(input, {
+    bounds: tricityBounds,
+    strictBounds: false,
+    componentRestrictions: { country: 'in' },
+    fields: ['formatted_address', 'geometry', 'name']
+  });
+  autocomplete.addListener('place_changed', () => {
+    const place = autocomplete.getPlace();
+    if (place && place.geometry && place.geometry.location) {
+      document.getElementById('lf-lat').value = place.geometry.location.lat();
+      document.getElementById('lf-lng').value = place.geometry.location.lng();
+    }
+  });
 }
 
 function closeListingForm() { listingBackdrop.classList.remove('open'); }
@@ -870,6 +902,9 @@ async function submitListing(e) {
     phone: document.getElementById('lf-phone').value,
     area: areaVal,
     fullAddress: document.getElementById('lf-address').value,
+    locality: document.getElementById('lf-locality').value,
+    latitude: parseFloat(document.getElementById('lf-lat').value) || null,
+    longitude: parseFloat(document.getElementById('lf-lng').value) || null,
     modes: selectedModes,
     types: types,
     gradeSubjects: gradeSubjects,

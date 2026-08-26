@@ -38,7 +38,13 @@
   .wrap { max-width: 400px; width: 100%; position: relative; z-index: 3; animation: wrapIn 0.5s cubic-bezier(.2,.9,.25,1.05); }
   @keyframes wrapIn { from { opacity: 0; transform: translateY(14px) scale(0.97); } to { opacity: 1; transform: none; } }
 
-  .logo { font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 30px; text-align: center; margin-bottom: 4px; }
+  .back-home {
+    display: flex; align-items: center; gap: 6px; justify-content: center;
+    font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 700; color: var(--slate);
+    text-decoration: none; margin-bottom: 18px; transition: color 0.2s ease;
+  }
+  .back-home:hover { color: var(--violet); }
+  .logo { font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 30px; text-align: center; margin-bottom: 4px; text-decoration: none; color: inherit; display: block; }
   .logo .dot { color: var(--coral); }
   .sub {
     text-align: center; font-family: 'Fredoka', sans-serif; font-style: italic; font-weight: 500;
@@ -95,7 +101,8 @@
   </svg>
 
 <div class="wrap">
-  <div class="logo">Padhora<span class="dot">.</span></div>
+  <a href="index.html" class="back-home">&larr; Back to homepage</a>
+  <a href="index.html" class="logo">Padhora<span class="dot">.</span></a>
   <div class="sub">Padho Aur Badho.</div>
   <div class="card">
     <h1>Create your tutor account</h1>

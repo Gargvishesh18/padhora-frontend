@@ -4,37 +4,94 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Log in — Padhora</title>
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:ital,wght@0,400;0,500;0,600;0,700;0,800;1,600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --violet: #2E6DA4; --violet-deep: #1B4A73; --coral: #F2994A; --mint: #4C9A6A;
     --sand: #FFF8ED; --ink: #2B3A4A; --slate: #64748B; --line: rgba(46,109,164,0.12); --card: #FFFFFF;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--sand); font-family: 'Nunito', sans-serif; color: var(--ink); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
-  .wrap { max-width: 400px; width: 100%; }
-  .logo { font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 28px; text-align: center; margin-bottom: 6px; }
+  html { overflow-x: hidden; }
+  body {
+    background-color: var(--sand);
+    background-image:
+      linear-gradient(rgba(46,109,164,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(46,109,164,0.06) 1px, transparent 1px);
+    background-size: 28px 28px;
+    font-family: 'Nunito', sans-serif; color: var(--ink);
+    min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
+    position: relative; overflow-x: hidden;
+  }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+  .blob { position: absolute; border-radius: 50%; filter: blur(60px); opacity: 0.3; pointer-events: none; }
+  .blob1 { width: 300px; height: 300px; background: var(--violet); top: -60px; left: -60px; }
+  .blob2 { width: 260px; height: 260px; background: var(--mint); bottom: -60px; right: -60px; opacity: 0.22; }
+
+  .float-doodle { position: absolute; z-index: 2; }
+  .float-book { top: 10%; right: 7%; animation: floatDoodle3 7s ease-in-out infinite; }
+  .float-apple { bottom: 8%; left: 7%; animation: floatDoodle1 6s ease-in-out infinite; }
+  @keyframes floatDoodle1 { 0%,100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-14px) rotate(8deg); } }
+  @keyframes floatDoodle3 { 0%,100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-16px) rotate(6deg); } }
+  @media (max-width: 640px) { .float-doodle { display: none; } }
+
+  .wrap { max-width: 400px; width: 100%; position: relative; z-index: 3; animation: wrapIn 0.5s cubic-bezier(.2,.9,.25,1.05); }
+  @keyframes wrapIn { from { opacity: 0; transform: translateY(14px) scale(0.97); } to { opacity: 1; transform: none; } }
+
+  .logo { font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 30px; text-align: center; margin-bottom: 4px; }
   .logo .dot { color: var(--coral); }
-  .sub { text-align: center; color: var(--slate); font-size: 14px; margin-bottom: 28px; }
-  .card { background: var(--card); border-radius: 20px; padding: 30px; box-shadow: 0 20px 50px rgba(37,26,82,0.12); }
-  .card h1 { font-family: 'Fredoka', sans-serif; font-size: 22px; margin-bottom: 6px; }
-  .card .desc { font-size: 13px; color: var(--slate); margin-bottom: 22px; }
+  .sub {
+    text-align: center; font-family: 'Fredoka', sans-serif; font-style: italic; font-weight: 500;
+    color: var(--coral); font-size: 15px; margin-bottom: 26px;
+  }
+  .card {
+    background: var(--card); border-radius: 22px; padding: 32px;
+    box-shadow: 0 24px 50px rgba(37,26,82,0.16); border: 1px solid rgba(255,255,255,0.6);
+  }
+  .card h1 {
+    font-family: 'Fredoka', sans-serif; font-size: 23px; margin-bottom: 6px;
+    background: linear-gradient(100deg, var(--violet), var(--coral) 60%, var(--violet));
+    background-size: 200% auto; -webkit-background-clip: text; background-clip: text; color: transparent;
+    animation: shine 5s linear infinite;
+  }
+  @keyframes shine { to { background-position: 200% center; } }
+  .card .desc { font-size: 13px; color: var(--slate); margin-bottom: 24px; }
   .field { margin-bottom: 16px; }
   .field label { display: block; font-size: 13px; font-weight: 700; color: var(--violet); margin-bottom: 6px; }
-  .field input { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1.5px solid var(--line); font-size: 14px; font-family: 'Nunito', sans-serif; }
-  .field input:focus { outline: 2px solid var(--violet); }
-  .submit-btn {
-    width: 100%; background: var(--violet); color: white; border: none; padding: 13px; border-radius: 10px;
-    font-weight: 700; font-size: 15px; cursor: pointer; margin-top: 6px; transition: transform 0.15s ease;
+  .field input {
+    width: 100%; padding: 13px 14px; border-radius: 12px; border: 1.5px solid var(--line);
+    font-size: 14px; font-family: 'Nunito', sans-serif; background: #F9FAFB; transition: border-color 0.2s ease, box-shadow 0.2s ease;
   }
-  .submit-btn:hover { transform: scale(1.02); }
-  .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .field input:focus { outline: none; border-color: var(--violet); box-shadow: 0 0 0 3px rgba(46,109,164,0.12); }
+  .submit-btn {
+    width: 100%; background: var(--violet); color: white; border: none; padding: 14px; border-radius: 12px;
+    font-weight: 700; font-size: 15px; cursor: pointer; margin-top: 6px;
+    transition: transform 0.2s cubic-bezier(.34,1.56,.64,1), box-shadow 0.2s ease;
+  }
+  .submit-btn:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 10px 22px rgba(46,109,164,0.4); }
+  .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
   .error { color: var(--coral); font-size: 13px; margin-top: 10px; display: none; }
   .switch { text-align: center; font-size: 13px; color: var(--slate); margin-top: 18px; }
   .switch a { color: var(--violet); font-weight: 700; text-decoration: none; }
+  .switch a:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
+  <div class="blob blob1"></div>
+  <div class="blob blob2"></div>
+
+  <svg class="float-doodle float-book" viewBox="0 0 64 64" width="42" height="42">
+    <defs><linearGradient id="bookGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#4A90C8"/><stop offset="100%" stop-color="#2E6DA4"/></linearGradient></defs>
+    <path d="M8 14 C8 11 10 9 13 9 H30 V52 H13 C10 52 8 50 8 47 Z" fill="url(#bookGrad)" filter="drop-shadow(0 4px 6px rgba(46,109,164,0.35))"/>
+    <path d="M56 14 C56 11 54 9 51 9 H34 V52 H51 C54 52 56 50 56 47 Z" fill="#6BB98A"/>
+    <rect x="30" y="9" width="4" height="43" fill="#1B4A73"/>
+  </svg>
+  <svg class="float-doodle float-apple" viewBox="0 0 64 64" width="40" height="40">
+    <defs><linearGradient id="appleGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#EC8AA5"/><stop offset="100%" stop-color="#E36B8A"/></linearGradient></defs>
+    <path d="M32 22 C20 20 12 28 12 40 C12 50 20 58 28 58 C30 58 31 57 32 57 C33 57 34 58 36 58 C44 58 52 50 52 40 C52 28 44 20 32 22 Z" fill="url(#appleGrad)" filter="drop-shadow(0 4px 6px rgba(227,107,138,0.4))"/>
+    <path d="M32 22 C31 16 34 11 40 9" fill="none" stroke="#4C9A6A" stroke-width="4" stroke-linecap="round"/>
+  </svg>
+
 <div class="wrap">
   <div class="logo">Padhora<span class="dot">.</span></div>
   <div class="sub">Padho Aur Badho.</div>

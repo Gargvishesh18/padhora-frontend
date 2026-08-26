@@ -121,7 +121,11 @@
   @keyframes floatDoodle1 { 0%,100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-14px) rotate(8deg); } }
   @keyframes floatDoodle2 { 0%,100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-10px) rotate(-12deg); } }
   @keyframes floatDoodle3 { 0%,100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-16px) rotate(6deg); } }
-  @media (max-width: 900px) { .float-doodle { display: none; } }
+  @media (max-width: 900px) {
+    .float-pencil { top: 6px; right: 4%; left: auto; width: 32px !important; height: 32px !important; }
+    .float-star { top: 100px; left: 4%; width: 24px !important; height: 24px !important; }
+    .float-book { display: none; }
+  }
   .eyebrow {
     font-family: 'Space Mono', monospace; font-size: 13px; color: var(--violet);
     letter-spacing: 1px; margin-bottom: 20px; display: inline-flex; align-items: center; gap: 8px;

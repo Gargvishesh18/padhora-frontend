@@ -533,6 +533,14 @@ function priceDisplay(t) {
   return `₹${t.price}${t.priceUnit || t.unit || ''}`;
 }
 
+function waLink(phone, tutorName) {
+  if (!phone) return '#';
+  const digits = String(phone).replace(/\D/g, '');
+  const withCountryCode = digits.length === 10 ? '91' + digits : digits;
+  const message = `Hi ${tutorName || ''}, I found your listing on Padhora and I'm interested in tuition for my child.`;
+  return `https://wa.me/${withCountryCode}?text=${encodeURIComponent(message)}`;
+}
+
 function render(list) {
   grid.innerHTML = '';
   list.forEach(t => {
@@ -546,7 +554,7 @@ function render(list) {
       <div class="tag-row"><span class="tag mode-tag">${modesDisplay(t)}</span>${(t.types || []).map(ty => `<span class="tag">${ty}</span>`).join('')}</div>
       <div class="card-footer">
         <div class="price">${priceDisplay(t)}</div>
-        <a class="wa-btn" href="#" onclick="event.stopPropagation(); return false;">WhatsApp</a>
+        <a class="wa-btn" href="${waLink(t.phone, t.name)}" target="_blank" rel="noopener" onclick="event.stopPropagation();">WhatsApp</a>
       </div>`;
     card.addEventListener('click', () => openModal(t));
     grid.appendChild(card);
@@ -589,7 +597,7 @@ function openModal(t) {
     <p class="modal-bio">${t.bio || ''}</p>
     <div class="price" style="margin: 10px 0;">${priceDisplay(t)}</div>
     ${testimonials.length ? `<div class="modal-reviews"><h4>What parents say</h4>${testimonials.map(r => `<div class="mini-review">${r}</div>`).join('')}</div>` : ''}
-    <div class="modal-actions"><a class="wa-btn" href="#" onclick="return false;">Message on WhatsApp</a></div>`;
+    <div class="modal-actions"><a class="wa-btn" href="${waLink(t.phone, t.name)}" target="_blank" rel="noopener">Message on WhatsApp</a></div>`;
   backdrop.classList.add('open');
 }
 function closeModal() { backdrop.classList.remove('open'); }

@@ -670,7 +670,7 @@
 
   <section class="section" id="browse">
     <div class="section-head">
-      <h2>Tutors near you</h2>
+      <h2 id="browse-heading">Tutors near you</h2>
       <div class="count" id="result-count">Search to see tutors</div>
     </div>
     <div class="grid" id="tutor-grid"></div>
@@ -894,7 +894,10 @@ function waLink(phone, tutorName) {
   return `https://wa.me/${withCountryCode}?text=${encodeURIComponent(message)}`;
 }
 
-function render(list) {
+function render(list, hasLocation) {
+  const headingEl = document.getElementById('browse-heading');
+  if (headingEl) headingEl.textContent = hasLocation ? 'Tutors near you' : 'All tutors';
+
   grid.innerHTML = '';
   if (list.length === 0) {
     grid.innerHTML = `
@@ -904,8 +907,8 @@ function render(list) {
           <circle cx="26" cy="26" r="16" fill="none" stroke="url(#emptyGlassGrad)" stroke-width="7"/>
           <rect x="37" y="37" width="8" height="20" rx="4" transform="rotate(45 41 47)" fill="#F2994A"/>
         </svg>
-        <h3>No tutors near you yet</h3>
-        <p>Try a wider distance, a different area, or removing a filter.</p>
+        <h3>${hasLocation ? 'No tutors near you yet' : 'No tutors match yet'}</h3>
+        <p>${hasLocation ? 'Try a wider distance, a different filter, or removing a filter.' : 'Try different filters, or check back soon — we\'re onboarding new tutors.'}</p>
       </div>`;
     countEl.textContent = 'Beta: No tutors yet';
     const statElEmpty = document.getElementById('tutor-count-stat');
@@ -1049,6 +1052,46 @@ function haversineKm(lat1, lng1, lat2, lng2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
+function hasLocationSelected() {
+  const pLat = parseFloat(document.getElementById('f-lat').value);
+  const pLng = parseFloat(document.getElementById('f-lng').value);
+  return !isNaN(pLat) && !isNaN(pLng);
+}
+
+function focusLocalitySearch() {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  const el = document.getElementById('f-locality');
+  if (el) setTimeout(() => el.focus(), 450);
+}
+
+function renderSearchPrompt() {
+  const headingEl = document.getElementById('browse-heading');
+  if (headingEl) headingEl.textContent = 'Tutors near you';
+  grid.innerHTML = `
+    <div class="empty-state">
+      <svg viewBox="0 0 64 64" width="56" height="56">
+        <defs><linearGradient id="promptGlassGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#4A90C8"/><stop offset="100%" stop-color="#2E6DA4"/></linearGradient></defs>
+        <circle cx="26" cy="26" r="16" fill="none" stroke="url(#promptGlassGrad)" stroke-width="7"/>
+        <rect x="37" y="37" width="8" height="20" rx="4" transform="rotate(45 41 47)" fill="#2E6DA4"/>
+      </svg>
+      <h3>Search to see tutors</h3>
+      <p>Enter your locality above and pick a suggestion to see real, verified tutors sorted by distance.</p>
+      <button onclick="focusLocalitySearch()" style="margin-top:14px;background:var(--coral);color:white;border:none;font-weight:700;font-size:13px;padding:10px 20px;border-radius:999px;cursor:pointer;">Search now</button>
+    </div>`;
+  countEl.textContent = 'Search to see tutors';
+}
+
+async function refreshTutorCountStat() {
+  const statEl = document.getElementById('tutor-count-stat');
+  if (!statEl) return;
+  try {
+    const apiResult = await loadTutorsFromApi({});
+    statEl.textContent = apiResult ? apiResult.length : tutors.length;
+  } catch (e) {
+    statEl.textContent = tutors.length;
+  }
+}
+
 function applyDistanceSortAndFilter(list) {
   const pLat = parseFloat(document.getElementById('f-lat').value);
   const pLng = parseFloat(document.getElementById('f-lng').value);
@@ -1084,10 +1127,11 @@ function matchesSelectedTypes(t) {
 
 async function applyFilters() {
   const mode = activeMode;
+  const hasLocation = hasLocationSelected();
 
   const apiResult = await loadTutorsFromApi({ mode });
   if (apiResult) {
-    render(applyDistanceSortAndFilter(apiResult.filter(matchesSelectedTypes)));
+    render(applyDistanceSortAndFilter(apiResult.filter(matchesSelectedTypes)), hasLocation);
     return;
   }
 
@@ -1095,7 +1139,7 @@ async function applyFilters() {
     matchesSelectedTypes(t) &&
     (!mode || (Array.isArray(t.modes) ? t.modes.includes(mode) : t.mode === mode))
   );
-  render(applyDistanceSortAndFilter(filtered));
+  render(applyDistanceSortAndFilter(filtered), hasLocation);
 }
 
 function initSearchLocalityAutocomplete() {
@@ -1526,7 +1570,8 @@ function showListingSuccess() {
 }
 
 initSearchLocalityAutocomplete();
-applyFilters();
+renderSearchPrompt();
+refreshTutorCountStat();
 
 /* Pencil scroll progress */
 (function() {

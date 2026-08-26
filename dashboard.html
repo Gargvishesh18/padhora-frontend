@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My listing — Padhora</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --violet: #2E6DA4; --violet-deep: #1B4A73; --coral: #F2994A; --mint: #4C9A6A;
+    --sand: #FFF8ED; --ink: #2B3A4A; --slate: #64748B; --line: rgba(46,109,164,0.12); --card: #FFFFFF;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--sand); font-family: 'Nunito', sans-serif; color: var(--ink); padding: 24px 16px 60px; }
+  .wrap { max-width: 640px; margin: 0 auto; }
+  .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .logo { font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 22px; }
+  .logo .dot { color: var(--coral); }
+  .logout-btn { background: none; border: 1.5px solid var(--line); color: var(--slate); padding: 8px 16px; border-radius: 999px; font-size: 13px; font-weight: 700; cursor: pointer; }
+
+  .status-banner { border-radius: 14px; padding: 14px 18px; margin-bottom: 20px; font-size: 14px; font-weight: 700; }
+  .status-banner.DRAFT { background: #EAF4FC; color: var(--violet); }
+  .status-banner.PENDING { background: #FFF3D6; color: #92700C; }
+  .status-banner.APPROVED { background: rgba(76,154,106,0.16); color: #2C7A4C; }
+  .status-banner.REJECTED { background: #FDE2E2; color: #C0392B; }
+
+  .card { background: var(--card); border-radius: 20px; padding: 26px; box-shadow: 0 10px 30px rgba(37,26,82,0.08); }
+  .form-field { margin-bottom: 16px; }
+  .form-field label { display: block; font-size: 13px; font-weight: 700; color: var(--violet); margin-bottom: 6px; }
+  .form-field input, .form-field select, .form-field textarea {
+    width: 100%; padding: 12px 14px; border-radius: 10px; border: 1.5px solid var(--line);
+    font-size: 14px; font-family: 'Nunito', sans-serif; background: #F9FAFB;
+  }
+  .form-field textarea { resize: vertical; min-height: 70px; }
+  .form-row { display: flex; gap: 10px; }
+  .form-row .form-field { flex: 1; }
+  .checkbox-group { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { font-size: 12px; font-weight: 700; padding: 8px 14px; border-radius: 999px; border: 1.5px solid var(--line); cursor: pointer; color: var(--slate); user-select: none; }
+  .chip.checked { background: var(--violet); color: white; border-color: var(--violet); }
+  .price-chip.checked { background: var(--coral); border-color: var(--coral); }
+  .grade-subject-row { align-items: center; margin-bottom: 8px; }
+  .remove-row-btn { background: none; border: none; color: var(--coral); font-size: 20px; cursor: pointer; padding: 0 6px; }
+  .add-row-btn { background: none; border: 1.5px dashed var(--line); color: var(--violet); font-size: 13px; font-weight: 700; padding: 10px; border-radius: 10px; width: 100%; cursor: pointer; }
+  .submit-btn {
+    width: 100%; background: var(--coral); color: white; border: none; padding: 14px; border-radius: 12px;
+    font-weight: 700; font-size: 15px; cursor: pointer; margin-top: 10px;
+  }
+  .submit-btn:disabled { opacity: 0.6; }
+  .save-msg { text-align: center; font-size: 13px; margin-top: 10px; display: none; }
+  .save-msg.ok { color: var(--mint); }
+  .save-msg.err { color: var(--coral); }
+  .loading { text-align: center; padding: 60px 20px; color: var(--slate); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="logo">Padhora<span class="dot">.</span> <span style="font-size:13px;color:var(--slate);font-weight:400;">My listing</span></div>
+    <button class="logout-btn" onclick="logout()">Log out</button>
+  </div>
+
+  <div id="loading" class="loading">Loading your profile...</div>
+
+  <div id="content" style="display:none;">
+    <div class="status-banner" id="status-banner"></div>
+    <div class="card">
+      <form id="profile-form">
+        <div class="form-field"><label>Your name</label><input type="text" id="pf-name" required></div>
+        <div class="form-field"><label>Phone (WhatsApp)</label><input type="tel" id="pf-phone" required></div>
+        <div class="form-row">
+          <div class="form-field">
+            <label>Area</label>
+            <select id="pf-area" required>
+              <option value="">Select</option>
+              <option>Mohali</option><option>Chandigarh</option><option>Panchkula</option><option>Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-field">
+          <label>Locality / sector</label>
+          <input type="text" id="pf-locality" placeholder="Start typing your locality" autocomplete="off">
+          <input type="hidden" id="pf-lat"><input type="hidden" id="pf-lng">
+        </div>
+        <div class="form-field"><label>Full address <span style="font-weight:400;color:var(--slate);">(verification only, never shown to parents)</span></label><input type="text" id="pf-address"></div>
+
+        <div class="form-field">
+          <label>Where do you teach?</label>
+          <div class="checkbox-group" id="pf-modes">
+            <div class="chip" data-mode="At tutor's home">At tutor's home</div>
+            <div class="chip" data-mode="Tutor comes to you">Tutor comes to you</div>
+            <div class="chip" data-mode="Online">Online</div>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label>Type of help you offer</label>
+          <div class="checkbox-group" id="pf-types">
+            <div class="chip" data-type="Recurring Monthly">Recurring Monthly</div>
+            <div class="chip" data-type="Admission Prep">Admission Prep</div>
+            <div class="chip" data-type="Holiday Homework">Holiday Homework</div>
+            <div class="chip" data-type="Writing Improvement">Writing Improvement</div>
+            <div class="chip" data-type="Exam Prep">Exam Prep</div>
+            <div class="chip" data-type="Subject-Specific">Subject-Specific</div>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label>Classes & subjects</label>
+          <div id="grade-subject-rows"></div>
+          <button type="button" class="add-row-btn" onclick="addGradeSubjectRow()">+ Add class/subject row</button>
+        </div>
+
+        <div class="form-row">
+          <div class="form-field"><label>Qualification</label><input type="text" id="pf-qualification"></div>
+          <div class="form-field"><label>Years of experience</label><input type="number" id="pf-years" min="0"></div>
+        </div>
+
+        <div class="form-field">
+          <label>Languages</label>
+          <div class="checkbox-group" id="pf-languages">
+            <div class="chip" data-lang="Hindi">Hindi</div>
+            <div class="chip" data-lang="English">English</div>
+            <div class="chip" data-lang="Punjabi">Punjabi</div>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label>Pricing</label>
+          <div class="checkbox-group" id="pf-pricetype">
+            <div class="chip price-chip" data-price="Per month">Per month</div>
+            <div class="chip price-chip" data-price="Per session">Per session</div>
+            <div class="chip price-chip" data-price="Per batch">Per batch</div>
+            <div class="chip price-chip" data-price="Custom quote">Custom — contact for quote</div>
+          </div>
+          <div class="form-field" id="pf-price-row" style="margin-top:10px;">
+            <label>Price</label><input type="number" id="pf-price">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-field">
+            <label>Batch type</label>
+            <div class="checkbox-group" id="pf-batchtype">
+              <div class="chip" data-batch="One-on-one">One-on-one</div>
+              <div class="chip" data-batch="Group batches">Group batches</div>
+              <div class="chip" data-batch="Both">Both</div>
+            </div>
+          </div>
+        </div>
+        <div class="form-field">
+          <label>Trial class offered?</label>
+          <div class="checkbox-group" id="pf-trial">
+            <div class="chip" data-trial="true">Yes</div>
+            <div class="chip" data-trial="false">No</div>
+          </div>
+        </div>
+        <div class="form-field">
+          <label>Preferred timing</label>
+          <div class="checkbox-group" id="pf-timing">
+            <div class="chip" data-timing="Morning">Morning</div>
+            <div class="chip" data-timing="Afternoon">Afternoon</div>
+            <div class="chip" data-timing="Evening">Evening</div>
+            <div class="chip" data-timing="Flexible">Flexible</div>
+          </div>
+        </div>
+
+        <div class="form-field"><label>Photo link</label><input type="url" id="pf-photo-url" placeholder="https://..."></div>
+        <div class="form-field"><label>Intro video link (YouTube)</label><input type="url" id="pf-video-url" placeholder="https://youtube.com/..."></div>
+        <div class="form-field"><label>Short bio</label><textarea id="pf-bio"></textarea></div>
+
+        <button type="submit" class="submit-btn" id="save-btn">Save listing</button>
+        <div class="save-msg" id="save-msg"></div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD1pLH2YEvlEYV228wcHQnjD4J_gF_Wotw&libraries=places&callback=onGoogleMapsReady" async defer></script>
+<script>
+const API_BASE_URL = "https://padhora-backend-production.up.railway.app";
+const token = localStorage.getItem('padhora_token');
+if (!token) window.location.href = 'login.html';
+
+let selectedModes = [], selectedTypes = [], selectedLanguages = [], selectedTimings = [];
+let selectedPriceType = '', selectedBatchType = '', selectedTrial = '';
+let gradeSubjectRowCount = 0;
+
+function logout() {
+  localStorage.removeItem('padhora_token');
+  localStorage.removeItem('padhora_tutor_id');
+  window.location.href = 'login.html';
+}
+
+function toggleChip(el, group) {
+  el.classList.toggle('checked');
+  const maps = { types: selectedTypes, modes: selectedModes, languages: selectedLanguages, timings: selectedTimings };
+  const key = group === 'types' ? el.dataset.type : group === 'modes' ? el.dataset.mode : group === 'languages' ? el.dataset.lang : el.dataset.timing;
+  let arr = maps[group];
+  if (arr.includes(key)) arr = arr.filter(v => v !== key); else arr.push(key);
+  if (group === 'types') selectedTypes = arr;
+  if (group === 'modes') selectedModes = arr;
+  if (group === 'languages') selectedLanguages = arr;
+  if (group === 'timings') selectedTimings = arr;
+}
+
+document.querySelectorAll('#pf-modes .chip').forEach(c => c.addEventListener('click', () => toggleChip(c, 'modes')));
+document.querySelectorAll('#pf-types .chip').forEach(c => c.addEventListener('click', () => toggleChip(c, 'types')));
+document.querySelectorAll('#pf-languages .chip').forEach(c => c.addEventListener('click', () => toggleChip(c, 'languages')));
+document.querySelectorAll('#pf-timing .chip').forEach(c => c.addEventListener('click', () => toggleChip(c, 'timings')));
+document.querySelectorAll('#pf-pricetype .chip').forEach(c => c.addEventListener('click', () => {
+  document.querySelectorAll('#pf-pricetype .chip').forEach(x => x.classList.remove('checked'));
+  c.classList.add('checked');
+  selectedPriceType = c.dataset.price;
+  document.getElementById('pf-price-row').style.display = selectedPriceType === 'Custom quote' ? 'none' : 'block';
+}));
+document.querySelectorAll('#pf-batchtype .chip').forEach(c => c.addEventListener('click', () => {
+  document.querySelectorAll('#pf-batchtype .chip').forEach(x => x.classList.remove('checked'));
+  c.classList.add('checked');
+  selectedBatchType = c.dataset.batch;
+}));
+document.querySelectorAll('#pf-trial .chip').forEach(c => c.addEventListener('click', () => {
+  document.querySelectorAll('#pf-trial .chip').forEach(x => x.classList.remove('checked'));
+  c.classList.add('checked');
+  selectedTrial = c.dataset.trial;
+}));
+
+function addGradeSubjectRow(grade = '', subjects = '') {
+  gradeSubjectRowCount++;
+  const id = gradeSubjectRowCount;
+  const container = document.getElementById('grade-subject-rows');
+  const row = document.createElement('div');
+  row.className = 'form-row grade-subject-row';
+  row.id = `gs-row-${id}`;
+  row.innerHTML = `
+    <div class="form-field"><input type="text" class="gs-grade" placeholder="e.g. Class 6 - Class 8" value="${grade}"></div>
+    <div class="form-field"><input type="text" class="gs-subjects" placeholder="Subjects" value="${subjects}"></div>
+    <button type="button" class="remove-row-btn" onclick="document.getElementById('gs-row-${id}').remove()">×</button>`;
+  container.appendChild(row);
+}
+
+function initLocalityAutocomplete() {
+  const input = document.getElementById('pf-locality');
+  if (!input || typeof google === 'undefined' || !google.maps || !google.maps.places) return;
+  const bounds = new google.maps.LatLngBounds(new google.maps.LatLng(30.60, 76.60), new google.maps.LatLng(30.85, 76.90));
+  const autocomplete = new google.maps.places.Autocomplete(input, { bounds, componentRestrictions: { country: 'in' }, fields: ['formatted_address', 'geometry'] });
+  autocomplete.addListener('place_changed', () => {
+    const place = autocomplete.getPlace();
+    if (place && place.geometry) {
+      document.getElementById('pf-lat').value = place.geometry.location.lat();
+      document.getElementById('pf-lng').value = place.geometry.location.lng();
+    }
+  });
+}
+window.onGoogleMapsReady = initLocalityAutocomplete;
+
+async function loadProfile() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/tutors/me`, { headers: { 'Authorization': 'Bearer ' + token } });
+    if (res.status === 401) { logout(); return; }
+    if (!res.ok) throw new Error();
+    const t = await res.json();
+
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('content').style.display = 'block';
+
+    const banner = document.getElementById('status-banner');
+    const statusText = {
+      DRAFT: "You haven't finished your profile yet — fill it in below and save to submit for review.",
+      PENDING: "Your listing is under review. We'll approve it shortly.",
+      APPROVED: "Your listing is live! Parents can see and contact you.",
+      REJECTED: "Your listing needs changes before it can go live. Update it below."
+    };
+    banner.className = 'status-banner ' + t.status;
+    banner.textContent = statusText[t.status] || '';
+
+    if (t.name) document.getElementById('pf-name').value = t.name;
+    if (t.phone) document.getElementById('pf-phone').value = t.phone;
+    if (t.area) document.getElementById('pf-area').value = t.area;
+    if (t.locality) document.getElementById('pf-locality').value = t.locality;
+    if (t.latitude) document.getElementById('pf-lat').value = t.latitude;
+    if (t.longitude) document.getElementById('pf-lng').value = t.longitude;
+    if (t.fullAddress) document.getElementById('pf-address').value = t.fullAddress;
+    if (t.qualification) document.getElementById('pf-qualification').value = t.qualification;
+    if (t.yearsExperience != null) document.getElementById('pf-years').value = t.yearsExperience;
+    if (t.photoUrl) document.getElementById('pf-photo-url').value = t.photoUrl;
+    if (t.videoUrl) document.getElementById('pf-video-url').value = t.videoUrl;
+    if (t.bio) document.getElementById('pf-bio').value = t.bio;
+    if (t.price) document.getElementById('pf-price').value = t.price;
+
+    (t.modes || []).forEach(m => { selectedModes.push(m); document.querySelector(`#pf-modes [data-mode="${m}"]`)?.classList.add('checked'); });
+    (t.types || []).forEach(ty => { selectedTypes.push(ty); document.querySelector(`#pf-types [data-type="${ty}"]`)?.classList.add('checked'); });
+    (t.languages || []).forEach(l => { selectedLanguages.push(l); document.querySelector(`#pf-languages [data-lang="${l}"]`)?.classList.add('checked'); });
+    (t.preferredTimings || []).forEach(tm => { selectedTimings.push(tm); document.querySelector(`#pf-timing [data-timing="${tm}"]`)?.classList.add('checked'); });
+    if (t.priceType) { selectedPriceType = t.priceType; document.querySelector(`#pf-pricetype [data-price="${t.priceType}"]`)?.classList.add('checked'); if (t.priceType === 'Custom quote') document.getElementById('pf-price-row').style.display = 'none'; }
+    if (t.batchType) { selectedBatchType = t.batchType; document.querySelector(`#pf-batchtype [data-batch="${t.batchType}"]`)?.classList.add('checked'); }
+    if (t.trialAvailable != null) { selectedTrial = String(t.trialAvailable); document.querySelector(`#pf-trial [data-trial="${selectedTrial}"]`)?.classList.add('checked'); }
+
+    if (t.gradeSubjects && t.gradeSubjects.length) {
+      t.gradeSubjects.forEach(gs => addGradeSubjectRow(gs.grade || '', gs.subjects || ''));
+    } else {
+      addGradeSubjectRow();
+    }
+
+    initLocalityAutocomplete();
+  } catch (err) {
+    document.getElementById('loading').textContent = "Couldn't load your profile. Try refreshing.";
+  }
+}
+
+document.getElementById('profile-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('save-btn');
+  const msg = document.getElementById('save-msg');
+  btn.disabled = true; btn.textContent = 'Saving...';
+  msg.style.display = 'none';
+
+  const gradeSubjects = Array.from(document.querySelectorAll('.grade-subject-row')).map(row => ({
+    grade: row.querySelector('.gs-grade').value,
+    subjects: row.querySelector('.gs-subjects').value
+  })).filter(gs => gs.grade || gs.subjects);
+
+  const priceUnitMap = { 'Per month': '/month', 'Per session': '/session', 'Per batch': '/batch' };
+
+  const payload = {
+    name: document.getElementById('pf-name').value,
+    phone: document.getElementById('pf-phone').value,
+    area: document.getElementById('pf-area').value,
+    fullAddress: document.getElementById('pf-address').value,
+    locality: document.getElementById('pf-locality').value,
+    latitude: parseFloat(document.getElementById('pf-lat').value) || null,
+    longitude: parseFloat(document.getElementById('pf-lng').value) || null,
+    modes: selectedModes,
+    types: selectedTypes,
+    gradeSubjects,
+    qualification: document.getElementById('pf-qualification').value,
+    languages: selectedLanguages,
+    yearsExperience: parseInt(document.getElementById('pf-years').value) || null,
+    priceType: selectedPriceType,
+    price: selectedPriceType === 'Custom quote' ? null : (parseInt(document.getElementById('pf-price').value) || null),
+    priceUnit: priceUnitMap[selectedPriceType] || null,
+    batchType: selectedBatchType,
+    trialAvailable: selectedTrial === 'true' ? true : (selectedTrial === 'false' ? false : null),
+    preferredTimings: selectedTimings,
+    photoUrl: document.getElementById('pf-photo-url').value,
+    videoUrl: document.getElementById('pf-video-url').value,
+    bio: document.getElementById('pf-bio').value
+  };
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/tutors/me`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Something went wrong.');
+    msg.className = 'save-msg ok'; msg.textContent = data.message || 'Saved!'; msg.style.display = 'block';
+    loadProfile();
+  } catch (err) {
+    msg.className = 'save-msg err'; msg.textContent = err.message; msg.style.display = 'block';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save listing';
+  }
+});
+
+loadProfile();
+</script>
+</body>
+</html>

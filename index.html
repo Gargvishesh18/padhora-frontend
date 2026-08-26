@@ -34,7 +34,10 @@
     border-radius: 4px;
   }
   .scroll-pencil { position: absolute; left: -10px; top: 0; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.25)); }
-  @media (max-width: 900px) { .scroll-track { display: none; } }
+  @media (max-width: 900px) {
+    .scroll-track { left: 4px; width: 3px; }
+    .scroll-pencil { left: -8px; width: 18px !important; height: 18px !important; }
+  }
 
   body {
     background-color: var(--sand);
@@ -248,6 +251,13 @@
 
   /* TUTOR GRID */
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(255px, 1fr)); gap: 28px; }
+  .empty-state {
+    grid-column: 1 / -1; text-align: center; padding: 50px 20px; color: var(--slate);
+    background: var(--card); border-radius: 18px; border: 1.5px dashed var(--line);
+  }
+  .empty-state svg { margin-bottom: 14px; }
+  .empty-state h3 { font-family: 'Fredoka', sans-serif; font-size: 18px; color: var(--ink); margin-bottom: 6px; }
+  .empty-state p { font-size: 14px; }
   .card {
     background-color: #2E4A3D;
     background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px);
@@ -592,7 +602,7 @@
             <option>Tutor comes to you</option>
             <option>Online</option>
           </select>
-          <button onclick="applyFilters()">Search tutors</button>
+          <button onclick="applyFilters(); scrollToResults();">Search tutors</button>
         </div>
         <div class="other-row" id="f-type-other-wrap" style="display:none;">
           <input type="text" id="f-type-other" placeholder="What kind of help are you looking for?">
@@ -904,6 +914,20 @@ function waLink(phone, tutorName) {
 
 function render(list) {
   grid.innerHTML = '';
+  if (list.length === 0) {
+    grid.innerHTML = `
+      <div class="empty-state">
+        <svg viewBox="0 0 64 64" width="56" height="56">
+          <defs><linearGradient id="emptyGlassGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#F7B978"/><stop offset="100%" stop-color="#F2994A"/></linearGradient></defs>
+          <circle cx="26" cy="26" r="16" fill="none" stroke="url(#emptyGlassGrad)" stroke-width="7"/>
+          <rect x="37" y="37" width="8" height="20" rx="4" transform="rotate(45 41 47)" fill="#F2994A"/>
+        </svg>
+        <h3>No tutors near you yet</h3>
+        <p>Try a wider distance, a different area, or removing a filter.</p>
+      </div>`;
+    countEl.textContent = '0 listed';
+    return;
+  }
   list.forEach((t, i) => {
     const card = document.createElement('div');
     card.className = 'card';
@@ -1071,6 +1095,11 @@ function applyDistanceSortAndFilter(list) {
     if (b._distanceKm === null) return -1;
     return a._distanceKm - b._distanceKm;
   });
+}
+
+function scrollToResults() {
+  const target = document.getElementById('browse');
+  if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 async function applyFilters() {

@@ -628,16 +628,10 @@
 
         <div class="search-secondary">
           <div class="mini-chip-group" id="mode-chips">
-            <div class="mini-chip active" data-mode="">Any mode</div>
-            <div class="mini-chip" data-mode="At tutor's home">At tutor's home</div>
-            <div class="mini-chip" data-mode="Tutor comes to you">Tutor comes to you</div>
-            <div class="mini-chip" data-mode="Online">Online</div>
-          </div>
-          <div class="mini-chip-group" id="area-chips">
-            <div class="mini-chip active" data-area="">Any area</div>
-            <div class="mini-chip" data-area="Mohali">Mohali</div>
-            <div class="mini-chip" data-area="Chandigarh">Chandigarh</div>
-            <div class="mini-chip" data-area="Panchkula">Panchkula</div>
+            <div class="mini-chip active" data-mode="">All modes</div>
+            <div class="mini-chip" data-mode="At tutor's home">🏠 Tutor's place (you visit them)</div>
+            <div class="mini-chip" data-mode="Tutor comes to you">🚗 Your home (they visit you)</div>
+            <div class="mini-chip" data-mode="Online">💻 Online</div>
           </div>
         </div>
       </div>
@@ -848,7 +842,6 @@ const tutors = [];
 const grid = document.getElementById('tutor-grid');
 const countEl = document.getElementById('result-count');
 let activeType = "";
-let activeArea = "";
 let activeMode = "";
 
 function initials(name) { return name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase(); }
@@ -942,15 +935,6 @@ document.querySelectorAll('#mode-chips .mini-chip').forEach(chip => {
     document.querySelectorAll('#mode-chips .mini-chip').forEach(c => c.classList.remove('active'));
     chip.classList.add('active');
     activeMode = chip.dataset.mode;
-    applyFilters();
-  });
-});
-
-document.querySelectorAll('#area-chips .mini-chip').forEach(chip => {
-  chip.addEventListener('click', () => {
-    document.querySelectorAll('#area-chips .mini-chip').forEach(c => c.classList.remove('active'));
-    chip.classList.add('active');
-    activeArea = chip.dataset.area;
     applyFilters();
   });
 });
@@ -1072,15 +1056,13 @@ function scrollToResults() {
 
 async function applyFilters() {
   const type = activeType;
-  const area = activeArea;
   const mode = activeMode;
 
-  const apiResult = await loadTutorsFromApi({ area, mode, type });
+  const apiResult = await loadTutorsFromApi({ mode, type });
   if (apiResult) { render(applyDistanceSortAndFilter(apiResult)); return; }
 
   const filtered = tutors.filter(t =>
     (!type || t.types.includes(type)) &&
-    (!area || t.area === area) &&
     (!mode || (Array.isArray(t.modes) ? t.modes.includes(mode) : t.mode === mode))
   );
   render(applyDistanceSortAndFilter(filtered));

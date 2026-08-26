@@ -111,6 +111,20 @@
     border: none; background: #F4F1FF; color: var(--ink); flex: 1 1 140px;
   }
   .other-row { margin-top: 8px; }
+  .other-row select { width: 100%; margin-top: 8px; padding: 12px 14px; border-radius: 12px; border: none; background: #F4F1FF; font-family: 'Inter', sans-serif; font-size: 14px; }
+  .distance-slider-wrap { margin-top: 12px; background: #F4F1FF; border-radius: 12px; padding: 12px 14px; }
+  .distance-slider-label { font-size: 13px; font-weight: 700; color: var(--violet); margin-bottom: 8px; }
+  .distance-slider-wrap input[type="range"] {
+    width: 100%; -webkit-appearance: none; height: 4px; border-radius: 4px;
+    background: linear-gradient(to right, var(--coral) 0%, var(--violet) 100%); outline: none;
+  }
+  .distance-slider-wrap input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%;
+    background: white; border: 3px solid var(--violet); cursor: pointer;
+  }
+  .distance-slider-wrap input[type="range"]::-moz-range-thumb {
+    width: 18px; height: 18px; border-radius: 50%; background: white; border: 3px solid var(--violet); cursor: pointer;
+  }
   .other-row input { width: 100%; }
   .search-card select:focus, .search-card input:focus { outline: 2px solid var(--violet); }
   .search-card button {
@@ -356,6 +370,15 @@
         <div class="other-row" id="f-area-other-wrap" style="display:none;">
           <input type="text" id="f-area-other" placeholder="Your area / locality">
         </div>
+        <div class="other-row" id="f-locality-row">
+          <input type="text" id="f-locality" placeholder="Your exact locality — get nearest tutors first" autocomplete="off">
+          <input type="hidden" id="f-lat">
+          <input type="hidden" id="f-lng">
+          <div class="distance-slider-wrap" id="f-distance-wrap" style="display:none;">
+            <div class="distance-slider-label">Within <span id="f-distance-value">10</span> km</div>
+            <input type="range" id="f-distance" min="1" max="25" value="10" step="1">
+          </div>
+        </div>
       </div>
 
       <div class="chips" id="chips">
@@ -483,7 +506,7 @@ function render(list) {
     card.innerHTML = `
       <div class="avatar-wrap"><div class="avatar">${initials(t.name)}</div>${stampSVG()}</div>
       <h3>${t.name}</h3>
-      <div class="area">${t.locality ? t.locality + ', ' : ''}${t.area} · ${gradeDisplay(t)}</div>
+      <div class="area">${t.locality ? t.locality + ', ' : ''}${t.area} · ${gradeDisplay(t)}${typeof t._distanceKm === 'number' ? ' · ' + t._distanceKm.toFixed(1) + ' km away' : ''}</div>
       <div class="rating-row"><span class="stars">${starString(t.rating || 0)}</span> ${t.rating || ''} <span class="rcount">${t.reviews ? '(' + t.reviews + ' reviews)' : ''}</span></div>
       <div class="tag-row"><span class="tag mode-tag">${modesDisplay(t)}</span>${(t.types || []).map(ty => `<span class="tag">${ty}</span>`).join('')}</div>
       <div class="card-footer">
@@ -608,6 +631,37 @@ async function loadTutorsFromApi(filters = {}) {
 }
 
 /* Rewriting applyFilters to try the real API, falling back to local mock filtering */
+function haversineKm(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) ** 2 + Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) * Math.sin(dLng/2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function applyDistanceSortAndFilter(list) {
+  const pLat = parseFloat(document.getElementById('f-lat').value);
+  const pLng = parseFloat(document.getElementById('f-lng').value);
+  const maxDist = parseFloat(document.getElementById('f-distance').value);
+  if (isNaN(pLat) || isNaN(pLng)) return list;
+
+  const withDistance = list.map(t => {
+    const hasCoords = typeof t.latitude === 'number' && typeof t.longitude === 'number';
+    const distance = hasCoords ? haversineKm(pLat, pLng, t.latitude, t.longitude) : null;
+    return { ...t, _distanceKm: distance };
+  });
+
+  const filtered = maxDist
+    ? withDistance.filter(t => t._distanceKm !== null && t._distanceKm <= maxDist)
+    : withDistance;
+
+  return filtered.sort((a, b) => {
+    if (a._distanceKm === null) return 1;
+    if (b._distanceKm === null) return -1;
+    return a._distanceKm - b._distanceKm;
+  });
+}
+
 async function applyFilters() {
   const typeSel = document.getElementById('f-type').value;
   const type = typeSel === 'Others' ? document.getElementById('f-type-other').value : (typeSel || activeType);
@@ -616,14 +670,49 @@ async function applyFilters() {
   const mode = document.getElementById('f-mode').value;
 
   const apiResult = await loadTutorsFromApi({ area, mode, type });
-  if (apiResult) { render(apiResult); return; }
+  if (apiResult) { render(applyDistanceSortAndFilter(apiResult)); return; }
 
   const filtered = tutors.filter(t =>
     (!type || t.types.includes(type) || (typeSel === 'Others' && type)) &&
     (!area || t.area === area || (areaSel === 'Others' && area)) &&
     (!mode || (Array.isArray(t.modes) ? t.modes.includes(mode) : t.mode === mode))
   );
-  render(filtered);
+  render(applyDistanceSortAndFilter(filtered));
+}
+
+function initSearchLocalityAutocomplete() {
+  const input = document.getElementById('f-locality');
+  if (!input || typeof google === 'undefined' || !google.maps || !google.maps.places) return;
+  const tricityBounds = new google.maps.LatLngBounds(
+    new google.maps.LatLng(30.60, 76.60),
+    new google.maps.LatLng(30.85, 76.90)
+  );
+  const autocomplete = new google.maps.places.Autocomplete(input, {
+    bounds: tricityBounds,
+    strictBounds: false,
+    componentRestrictions: { country: 'in' },
+    fields: ['formatted_address', 'geometry', 'name']
+  });
+  autocomplete.addListener('place_changed', () => {
+    const place = autocomplete.getPlace();
+    if (place && place.geometry && place.geometry.location) {
+      document.getElementById('f-lat').value = place.geometry.location.lat();
+      document.getElementById('f-lng').value = place.geometry.location.lng();
+      document.getElementById('f-distance-wrap').style.display = 'block';
+    }
+  });
+  const distanceSlider = document.getElementById('f-distance');
+  const distanceValueLabel = document.getElementById('f-distance-value');
+  if (distanceSlider) {
+    distanceSlider.addEventListener('input', () => {
+      distanceValueLabel.textContent = distanceSlider.value;
+    });
+  }
+  input.addEventListener('input', () => {
+    document.getElementById('f-lat').value = '';
+    document.getElementById('f-lng').value = '';
+    document.getElementById('f-distance-wrap').style.display = 'none';
+  });
 }
 
 /* ============================================
@@ -955,6 +1044,7 @@ function showListingSuccess() {
   `;
 }
 
+initSearchLocalityAutocomplete();
 applyFilters();
 </script>
 

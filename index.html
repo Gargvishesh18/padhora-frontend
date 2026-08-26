@@ -244,37 +244,82 @@
 
   /* TESTIMONIALS */
   .testi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px,1fr)); gap: 20px; }
-  .testi-card { background: var(--card); border: 1.5px solid var(--line); border-radius: 18px; padding: 24px; transition: transform 0.2s ease, box-shadow 0.2s ease; }
-  .testi-card:hover { transform: translateY(-6px); box-shadow: 0 16px 30px rgba(37,26,82,0.14); }
+  .testi-card {
+    background: var(--card); border: 1.5px solid var(--line); border-radius: 20px; padding: 26px;
+    position: relative; overflow: hidden;
+    transition: transform 0.25s cubic-bezier(.2,.8,.2,1), box-shadow 0.25s ease, border-color 0.25s ease;
+  }
+  .testi-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+    background: linear-gradient(to right, var(--coral), var(--violet));
+  }
+  .testi-card:hover { transform: translateY(-8px) rotate(-0.5deg); box-shadow: 0 18px 34px rgba(37,26,82,0.16); border-color: var(--violet); }
+  .testi-quote-mark {
+    position: absolute; top: 8px; right: 18px; font-family: 'Fraunces', serif; font-size: 64px;
+    font-weight: 700; color: rgba(61,43,125,0.08); line-height: 1; pointer-events: none;
+  }
   .testi-stars { color: var(--coral); letter-spacing: 2px; margin-bottom: 12px; font-size: 15px; }
-  .testi-card p { font-family: 'Fraunces', serif; font-style: italic; font-size: 15px; line-height: 1.55; color: var(--ink); margin-bottom: 14px; }
-  .testi-name { font-size: 12px; color: var(--slate); }
+  .testi-card p { font-family: 'Fraunces', serif; font-style: italic; font-size: 15px; line-height: 1.55; color: var(--ink); margin-bottom: 18px; position: relative; }
+  .testi-footer { display: flex; align-items: center; gap: 10px; border-top: 1px dashed var(--line); padding-top: 14px; }
+  .testi-avatar {
+    width: 36px; height: 36px; border-radius: 50%; flex: 0 0 auto;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Fraunces', serif; font-weight: 700; font-size: 15px; color: white;
+  }
+  .testi-1 .testi-avatar { background: linear-gradient(135deg, var(--coral), #FF8A70); }
+  .testi-2 .testi-avatar { background: linear-gradient(135deg, var(--violet), var(--violet-deep)); }
+  .testi-3 .testi-avatar { background: linear-gradient(135deg, var(--mint), #35A874); }
+  .testi-name { font-size: 13px; font-weight: 700; color: var(--ink); }
+  .testi-loc { font-size: 11px; color: var(--slate); }
 
   /* FAQ */
   .faq-list { max-width: 720px; }
-  .faq-item { border-bottom: 1px solid var(--line); }
+  .faq-item { border: 1.5px solid var(--line); border-radius: 14px; margin-bottom: 10px; background: var(--card); overflow: hidden; transition: border-color 0.2s ease; }
+  .faq-item:has(.faq-a.open) { border-color: var(--violet); }
   .faq-q {
     width: 100%; text-align: left; background: none; border: none;
-    font-family: 'Fraunces', serif; font-size: 17px; font-weight: 700; color: var(--ink);
-    padding: 20px 0; cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+    font-family: 'Fraunces', serif; font-size: 16px; font-weight: 700; color: var(--ink);
+    padding: 18px 20px; cursor: pointer; display: flex; align-items: center; gap: 12px;
   }
-  .faq-q span { color: var(--coral); font-size: 22px; transition: transform 0.25s cubic-bezier(.34,1.56,.64,1); }
-  .faq-q[aria-expanded="true"] span { transform: rotate(45deg); }
-  .faq-a { max-height: 0; overflow: hidden; font-size: 14px; color: var(--slate); line-height: 1.6; transition: max-height 0.25s ease; }
-  .faq-a.open { max-height: 200px; padding-bottom: 20px; }
+  .faq-icon {
+    flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%; background: rgba(61,43,125,0.08);
+    color: var(--violet); font-family: 'Space Mono', monospace; font-size: 13px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .faq-q span.faq-toggle { color: var(--coral); font-size: 20px; margin-left: auto; transition: transform 0.25s cubic-bezier(.34,1.56,.64,1); }
+  .faq-q[aria-expanded="true"] span.faq-toggle { transform: rotate(45deg); }
+  .faq-a { max-height: 0; overflow: hidden; font-size: 14px; color: var(--slate); line-height: 1.6; transition: max-height 0.25s ease; padding: 0 20px 0 58px; }
+  .faq-a.open { max-height: 200px; padding-bottom: 18px; }
 
   /* CTA */
-  .tutor-cta { text-align: center; padding: 64px 20px; }
-  .tutor-cta h2 { font-family: 'Fraunces', serif; font-size: 32px; margin-bottom: 12px; }
-  .tutor-cta p { color: var(--slate); max-width: 480px; margin: 0 auto 26px; }
+  .tutor-cta {
+    text-align: center; padding: 64px 32px; background: linear-gradient(135deg, var(--violet), var(--violet-deep));
+    border-radius: 28px; position: relative; overflow: hidden;
+  }
+  .cta-blob { position: absolute; border-radius: 50%; filter: blur(60px); pointer-events: none; }
+  .cta-blob1 { width: 260px; height: 260px; background: var(--coral); opacity: 0.35; top: -80px; left: -60px; }
+  .cta-blob2 { width: 220px; height: 220px; background: var(--mint); opacity: 0.25; bottom: -80px; right: -40px; }
+  .cta-inner { position: relative; z-index: 1; }
+  .cta-eyebrow {
+    font-family: 'Space Mono', monospace; font-size: 12px; letter-spacing: 1.5px; color: #FFB68A;
+    background: rgba(255,255,255,0.12); display: inline-block; padding: 6px 14px; border-radius: 999px; margin-bottom: 18px;
+  }
+  .tutor-cta h2 { font-family: 'Fraunces', serif; font-size: 32px; margin-bottom: 12px; color: white; }
+  .tutor-cta p { color: #D9D3F0; max-width: 480px; margin: 0 auto 26px; }
   .tutor-cta a {
     display: inline-block; background: var(--coral); color: white; text-decoration: none;
     font-weight: 700; padding: 16px 34px; border-radius: 999px;
     transition: transform 0.2s cubic-bezier(.34,1.56,.64,1), box-shadow 0.2s ease;
   }
-  .tutor-cta a:hover { transform: translateY(-4px) scale(1.03); box-shadow: 0 14px 28px rgba(255,95,78,0.4); }
+  .tutor-cta a:hover { transform: translateY(-4px) scale(1.03); box-shadow: 0 14px 28px rgba(255,95,78,0.5); }
 
-  footer { border-top: 1.5px solid var(--line); padding: 30px 0; font-size: 13px; color: var(--slate); display: flex; justify-content: space-between; }
+  footer { padding: 40px 0 30px; }
+  .footer-inner { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; border-top: 1.5px solid var(--line); padding-top: 28px; }
+  .footer-logo { font-family: 'Fraunces', serif; font-weight: 800; font-size: 20px; }
+  .footer-logo .dot { color: var(--coral); }
+  .footer-tagline { font-family: 'Fraunces', serif; font-style: italic; font-size: 13px; color: var(--slate); margin-top: 2px; }
+  .footer-meta { text-align: right; font-size: 13px; color: var(--slate); }
+  .footer-sub { font-size: 12px; color: var(--slate); opacity: 0.8; margin-top: 4px; }
 
   /* MODAL */
   .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(26,23,48,0.55); backdrop-filter: blur(3px); align-items: center; justify-content: center; padding: 20px; z-index: 50; }
@@ -457,33 +502,72 @@
   <section class="section" id="testimonials">
     <div class="section-head"><h2>What parents say</h2></div>
     <div class="testi-grid">
-      <div class="testi-card"><div class="testi-stars">★★★★★</div><p>"Found a writing tutor for my daughter within a day. She messaged back within the hour."</p><div class="testi-name">— Kavita, Mohali</div></div>
-      <div class="testi-card"><div class="testi-stars">★★★★★</div><p>"I could see exactly who does admission prep instead of messaging ten random tutors."</p><div class="testi-name">— Rajesh, Chandigarh</div></div>
-      <div class="testi-card"><div class="testi-stars">★★★★☆</div><p>"The verified badge meant something — ID and experience checked before I reached out."</p><div class="testi-name">— Simran, Panchkula</div></div>
+      <div class="testi-card testi-1">
+        <div class="testi-quote-mark">"</div>
+        <div class="testi-stars">★★★★★</div>
+        <p>Found a writing tutor for my daughter within a day. She messaged back within the hour.</p>
+        <div class="testi-footer">
+          <div class="testi-avatar">K</div>
+          <div><div class="testi-name">Kavita</div><div class="testi-loc">Mohali</div></div>
+        </div>
+      </div>
+      <div class="testi-card testi-2">
+        <div class="testi-quote-mark">"</div>
+        <div class="testi-stars">★★★★★</div>
+        <p>I could see exactly who does admission prep instead of messaging ten random tutors.</p>
+        <div class="testi-footer">
+          <div class="testi-avatar">R</div>
+          <div><div class="testi-name">Rajesh</div><div class="testi-loc">Chandigarh</div></div>
+        </div>
+      </div>
+      <div class="testi-card testi-3">
+        <div class="testi-quote-mark">"</div>
+        <div class="testi-stars">★★★★☆</div>
+        <p>The verified badge meant something — ID and experience checked before I reached out.</p>
+        <div class="testi-footer">
+          <div class="testi-avatar">S</div>
+          <div><div class="testi-name">Simran</div><div class="testi-loc">Panchkula</div></div>
+        </div>
+      </div>
     </div>
   </section>
 
   <section class="section" id="faq">
     <div class="section-head"><h2>Before you message a tutor</h2></div>
     <div class="faq-list">
-      <div class="faq-item"><button class="faq-q">What does "Verified" actually mean? <span>+</span></button><div class="faq-a">Every tutor's phone number and government ID are checked before their listing goes live. Always have an introductory call before the first session.</div></div>
-      <div class="faq-item"><button class="faq-q">Is there a fee to contact a tutor? <span>+</span></button><div class="faq-a">No. Padhora doesn't charge parents or take a cut of tuition fees. You message tutors directly on WhatsApp.</div></div>
-      <div class="faq-item"><button class="faq-q">How are ratings collected? <span>+</span></button><div class="faq-a">After a tuition period ends, parents who connected through Padhora can leave a rating and short review, shown on the tutor's profile.</div></div>
+      <div class="faq-item"><button class="faq-q"><span class="faq-icon">?</span>What does "Verified" actually mean? <span class="faq-toggle">+</span></button><div class="faq-a">Every tutor's phone number and government ID are checked before their listing goes live. Always have an introductory call before the first session.</div></div>
+      <div class="faq-item"><button class="faq-q"><span class="faq-icon">?</span>Is there a fee to contact a tutor? <span class="faq-toggle">+</span></button><div class="faq-a">No. Padhora doesn't charge parents or take a cut of tuition fees. You message tutors directly on WhatsApp.</div></div>
+      <div class="faq-item"><button class="faq-q"><span class="faq-icon">?</span>How are ratings collected? <span class="faq-toggle">+</span></button><div class="faq-a">After a tuition period ends, parents who connected through Padhora can leave a rating and short review, shown on the tutor's profile.</div></div>
     </div>
   </section>
 
-  <section class="tutor-cta" id="list">
-    <h2>Teach at home? Get listed.</h2>
-    <p>List your services free and reach parents actively looking for exactly what you offer.</p>
-    <a href="#" onclick="openListingForm(); return false;">List your tuition — it's free</a>
+  <section class="section" id="list">
+    <div class="tutor-cta">
+      <div class="cta-blob cta-blob1"></div>
+      <div class="cta-blob cta-blob2"></div>
+      <div class="cta-inner">
+        <div class="cta-eyebrow">FOR TUTORS</div>
+        <h2>Teach at home? Get listed.</h2>
+        <p>List your services free and reach parents actively looking for exactly what you offer.</p>
+        <a href="#" onclick="openListingForm(); return false;">List your tuition — it's free</a>
+      </div>
+    </div>
   </section>
 
   <div class="modal-backdrop" id="modal-backdrop"><div class="modal" id="modal-content"></div></div>
   <div class="modal-backdrop" id="listing-backdrop"><div class="modal" id="listing-content"></div></div>
 
   <footer>
-    <div>Padhora — Padho Aur Badho. Piloting in Tricity.</div>
-    <div>Currently onboarding tutors in Mohali, Chandigarh & Panchkula</div>
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="footer-logo">Padhora<span class="dot">.</span></div>
+        <div class="footer-tagline">Padho Aur Badho.</div>
+      </div>
+      <div class="footer-meta">
+        <div>Piloting in Tricity — Mohali, Chandigarh &amp; Panchkula</div>
+        <div class="footer-sub">Currently onboarding new tutors</div>
+      </div>
+    </div>
   </footer>
 </div>
 

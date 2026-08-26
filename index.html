@@ -248,14 +248,26 @@
   .search-card button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--violet); outline-offset: 2px; }
 
   /* CATEGORY CHIPS */
-  .chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+  .type-help-label { font-size: 13px; font-weight: 700; color: var(--violet); margin-top: 26px; margin-bottom: 10px; }
+  .type-help-label span { font-weight: 500; color: var(--slate); }
+  .chips { display: flex; flex-wrap: wrap; gap: 10px; }
   .chip {
     font-size: 13px; font-weight: 700; padding: 9px 16px; border-radius: 999px;
     border: 1.5px solid var(--line); background: var(--card); color: var(--slate); cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.2s ease; white-space: nowrap;
   }
   .chip:hover { border-color: var(--violet); color: var(--violet); transform: translateY(-2px); }
   .chip.active { background: var(--violet); color: white; border-color: var(--violet); }
+  .chip small { display: block; font-size: 10px; font-weight: 600; opacity: 0.75; margin-top: 1px; }
+  @media (max-width: 640px) {
+    .chips {
+      flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch;
+      padding-bottom: 6px; margin: 0 -24px; padding-left: 24px; padding-right: 24px;
+      scrollbar-width: none;
+    }
+    .chips::-webkit-scrollbar { display: none; }
+    .chip { flex: 0 0 auto; }
+  }
 
   /* TRUST BAR */
   .trust-bar {
@@ -636,14 +648,15 @@
         </div>
       </div>
 
+      <div class="type-help-label">What kind of help does your child need? <span>(tap all that apply)</span></div>
       <div class="chips" id="chips">
-        <div class="chip active" data-type="">All</div>
-        <div class="chip" data-type="Recurring Monthly">Recurring Monthly</div>
-        <div class="chip" data-type="Admission Prep">Admission Prep</div>
-        <div class="chip" data-type="Holiday Homework">Holiday Homework</div>
-        <div class="chip" data-type="Writing Improvement">Writing Improvement</div>
-        <div class="chip" data-type="Exam Prep">Exam Prep</div>
-        <div class="chip" data-type="Subject-Specific">Subject-Specific</div>
+        <div class="chip active" data-type="">All types</div>
+        <div class="chip" data-type="Recurring Monthly">🔁 Recurring Monthly<small>Ongoing tuition</small></div>
+        <div class="chip" data-type="Admission Prep">🎓 Admission Prep<small>Getting into a school</small></div>
+        <div class="chip" data-type="Holiday Homework">📚 Holiday Homework<small>Break catch-up</small></div>
+        <div class="chip" data-type="Writing Improvement">✍️ Writing Improvement<small>Handwriting &amp; writing</small></div>
+        <div class="chip" data-type="Exam Prep">📝 Exam Prep<small>Board / school exams</small></div>
+        <div class="chip" data-type="Subject-Specific">📖 Subject-Specific<small>One subject only</small></div>
       </div>
     </div>
 
@@ -841,7 +854,7 @@ const tutors = [];
 
 const grid = document.getElementById('tutor-grid');
 const countEl = document.getElementById('result-count');
-let activeType = "";
+let activeTypes = [];
 let activeMode = "";
 
 function initials(name) { return name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase(); }
@@ -921,11 +934,21 @@ function render(list) {
   if (statEl) statEl.textContent = list.length;
 }
 
+const allTypesChip = document.querySelector('.chip[data-type=""]');
 document.querySelectorAll('.chip').forEach(chip => {
   chip.addEventListener('click', () => {
-    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-    chip.classList.add('active');
-    activeType = chip.dataset.type;
+    const type = chip.dataset.type;
+    if (type === '') {
+      activeTypes = [];
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+    } else {
+      chip.classList.toggle('active');
+      activeTypes = chip.classList.contains('active')
+        ? [...activeTypes, type]
+        : activeTypes.filter(t => t !== type);
+      if (allTypesChip) allTypesChip.classList.toggle('active', activeTypes.length === 0);
+    }
     applyFilters();
   });
 });
@@ -1054,15 +1077,22 @@ function scrollToResults() {
   if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
+function matchesSelectedTypes(t) {
+  if (!activeTypes.length) return true;
+  return activeTypes.some(ty => (t.types || []).includes(ty));
+}
+
 async function applyFilters() {
-  const type = activeType;
   const mode = activeMode;
 
-  const apiResult = await loadTutorsFromApi({ mode, type });
-  if (apiResult) { render(applyDistanceSortAndFilter(apiResult)); return; }
+  const apiResult = await loadTutorsFromApi({ mode });
+  if (apiResult) {
+    render(applyDistanceSortAndFilter(apiResult.filter(matchesSelectedTypes)));
+    return;
+  }
 
   const filtered = tutors.filter(t =>
-    (!type || t.types.includes(type)) &&
+    matchesSelectedTypes(t) &&
     (!mode || (Array.isArray(t.modes) ? t.modes.includes(mode) : t.mode === mode))
   );
   render(applyDistanceSortAndFilter(filtered));

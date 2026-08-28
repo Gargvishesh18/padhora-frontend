@@ -89,6 +89,43 @@
   .save-msg.ok { color: var(--mint); }
   .save-msg.err { color: var(--coral); }
   .loading { text-align: center; padding: 60px 20px; color: var(--slate); }
+
+  .tab-row { display: flex; gap: 8px; margin-bottom: 18px; }
+  .tab-btn {
+    flex: 1; background: white; border: 1.5px solid var(--line); color: var(--slate); font-weight: 700;
+    font-size: 13.5px; padding: 11px; border-radius: 12px; cursor: pointer; position: relative;
+    font-family: 'Nunito', sans-serif; transition: all 0.2s ease;
+  }
+  .tab-btn.active { background: var(--violet); color: white; border-color: var(--violet); }
+  .tab-badge {
+    background: var(--coral); color: white; font-size: 10.5px; font-weight: 700; border-radius: 999px;
+    padding: 1px 7px; margin-left: 4px;
+  }
+  .enq-card {
+    background: var(--card); border-radius: 18px; padding: 20px; margin-bottom: 14px;
+    box-shadow: 0 10px 24px rgba(37,26,82,0.08); border: 1px solid rgba(255,255,255,0.6);
+  }
+  .enq-card.is-new { border-left: 4px solid var(--coral); }
+  .enq-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .enq-name { font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 17px; }
+  .enq-meta { font-size: 13px; color: var(--slate); margin-top: 4px; line-height: 1.6; }
+  .enq-message { font-size: 13.5px; color: var(--ink); background: #F9FAFB; border-radius: 10px; padding: 10px 12px; margin-top: 10px; }
+  .enq-status-pill { font-size: 11px; font-weight: 700; padding: 5px 11px; border-radius: 999px; white-space: nowrap; }
+  .enq-status-NEW, .enq-status-VIEWED { background: #FFF3D6; color: #92700C; }
+  .enq-status-ACCEPTED, .enq-status-CONNECTED { background: rgba(76,154,106,0.16); color: #2C7A4C; }
+  .enq-status-TUITION_STARTED, .enq-status-COMPLETED { background: rgba(46,109,164,0.14); color: var(--violet); }
+  .enq-status-DECLINED, .enq-status-EXPIRED { background: #FDE2E2; color: #C0392B; }
+  .enq-actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+  .enq-btn {
+    border: none; border-radius: 999px; font-size: 12.5px; font-weight: 700; padding: 9px 16px;
+    cursor: pointer; font-family: 'Nunito', sans-serif; transition: transform 0.15s ease;
+  }
+  .enq-btn:hover { transform: scale(1.05); }
+  .enq-btn.accept { background: var(--mint); color: white; }
+  .enq-btn.decline { background: none; border: 1.5px solid var(--line); color: var(--slate); }
+  .enq-btn.connected { background: var(--violet); color: white; }
+  .enq-btn.tuition { background: var(--coral); color: white; }
+  .enq-empty { text-align: center; padding: 50px 20px; color: var(--slate); font-size: 14px; }
 </style>
 </head>
 <body>
@@ -98,7 +135,16 @@
     <button class="logout-btn" onclick="logout()">Log out</button>
   </div>
 
+  <div class="tab-row" id="tab-row" style="display:none;">
+    <button class="tab-btn active" id="tab-btn-listing" onclick="switchTab('listing')">My Listing</button>
+    <button class="tab-btn" id="tab-btn-enquiries" onclick="switchTab('enquiries')">Enquiries <span class="tab-badge" id="enquiry-badge" style="display:none;"></span></button>
+  </div>
+
   <div id="loading" class="loading">Loading your profile...</div>
+
+  <div id="enquiries-panel" style="display:none;">
+    <div id="enquiries-list"></div>
+  </div>
 
   <div id="content" style="display:none;">
     <div class="status-banner" id="status-banner"></div>
@@ -301,6 +347,7 @@ async function loadProfile() {
 
     document.getElementById('loading').style.display = 'none';
     document.getElementById('content').style.display = 'block';
+    document.getElementById('tab-row').style.display = 'flex';
 
     const banner = document.getElementById('status-banner');
     const statusText = {
@@ -402,7 +449,96 @@ document.getElementById('profile-form').addEventListener('submit', async (e) => 
   }
 });
 
+/* ============================================
+   ENQUIRIES
+   Parent requests that came in through "Request Tutor" on the homepage.
+   ============================================ */
+function switchTab(tab) {
+  document.getElementById('tab-btn-listing').classList.toggle('active', tab === 'listing');
+  document.getElementById('tab-btn-enquiries').classList.toggle('active', tab === 'enquiries');
+  document.getElementById('content').style.display = tab === 'listing' ? 'block' : 'none';
+  document.getElementById('enquiries-panel').style.display = tab === 'enquiries' ? 'block' : 'none';
+  if (tab === 'enquiries') loadEnquiries();
+}
+
+const STATUS_LABEL = {
+  NEW: 'New', VIEWED: 'New', ACCEPTED: 'Accepted', DECLINED: 'Declined',
+  CONNECTED: 'Connected', TUITION_STARTED: 'Tuition started', COMPLETED: 'Completed', EXPIRED: 'Expired'
+};
+
+// What actions make sense from each status - keeps the tutor from e.g. "accepting" something already declined.
+function actionsFor(status) {
+  if (status === 'NEW' || status === 'VIEWED') return ['ACCEPTED', 'DECLINED'];
+  if (status === 'ACCEPTED') return ['CONNECTED'];
+  if (status === 'CONNECTED') return ['TUITION_STARTED'];
+  if (status === 'TUITION_STARTED') return ['COMPLETED'];
+  return [];
+}
+const ACTION_LABEL = { ACCEPTED: 'Accept', DECLINED: 'Decline', CONNECTED: 'Mark Connected', TUITION_STARTED: 'Tuition Started', COMPLETED: 'Mark Completed' };
+const ACTION_CLASS = { ACCEPTED: 'accept', DECLINED: 'decline', CONNECTED: 'connected', TUITION_STARTED: 'tuition', COMPLETED: 'connected' };
+
+async function loadEnquiries() {
+  const listEl = document.getElementById('enquiries-list');
+  listEl.innerHTML = '<div class="loading">Loading enquiries...</div>';
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/enquiries/tutor/inbox`, { headers: { 'Authorization': 'Bearer ' + token } });
+    if (res.status === 401) { logout(); return; }
+    if (!res.ok) throw new Error();
+    const enquiries = await res.json();
+
+    const newCount = enquiries.filter(e => e.status === 'NEW').length;
+    const badge = document.getElementById('enquiry-badge');
+    if (newCount > 0) { badge.style.display = 'inline-block'; badge.textContent = newCount; }
+    else { badge.style.display = 'none'; }
+
+    if (enquiries.length === 0) {
+      listEl.innerHTML = '<div class="enq-empty">No requests yet. Once your listing is live, parent requests will show up here.</div>';
+      return;
+    }
+
+    listEl.innerHTML = enquiries.map(e => `
+      <div class="enq-card ${e.status === 'NEW' ? 'is-new' : ''}" id="enq-card-${e.id}">
+        <div class="enq-top">
+          <div>
+            <div class="enq-name">${e.parentName}</div>
+            <div class="enq-meta">
+              ${e.subject || 'Tuition'}${e.className ? ' • ' + e.className : ''}<br>
+              ${e.mode ? e.mode + ' • ' : ''}${e.locality || ''}<br>
+              ${e.preferredTiming ? 'Timing: ' + e.preferredTiming + '<br>' : ''}
+              ${e.budget ? 'Budget: ' + e.budget + '<br>' : ''}
+              <a href="tel:${e.parentPhone}" style="color:var(--violet);font-weight:700;">${e.parentPhone}</a>
+              &nbsp;·&nbsp;${new Date(e.createdAt).toLocaleDateString()}
+            </div>
+          </div>
+          <span class="enq-status-pill enq-status-${e.status}">${STATUS_LABEL[e.status] || e.status}</span>
+        </div>
+        ${e.message ? `<div class="enq-message">${e.message}</div>` : ''}
+        <div class="enq-actions">
+          ${actionsFor(e.status).map(a => `<button class="enq-btn ${ACTION_CLASS[a]}" onclick="updateEnquiryStatus(${e.id}, '${a}')">${ACTION_LABEL[a]}</button>`).join('')}
+          <a class="enq-btn accept" style="text-decoration:none;display:inline-flex;align-items:center;" href="https://wa.me/${e.parentPhone.replace(/\D/g,'')}" target="_blank" rel="noopener">Message on WhatsApp</a>
+        </div>
+      </div>`).join('');
+  } catch (err) {
+    listEl.innerHTML = '<div class="enq-empty">Couldn\'t load your requests. Try refreshing.</div>';
+  }
+}
+
+async function updateEnquiryStatus(id, status) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/enquiries/tutor/${id}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ status })
+    });
+    if (!res.ok) throw new Error();
+    loadEnquiries();
+  } catch (err) {
+    alert("Couldn't update that request. Please try again.");
+  }
+}
+
 loadProfile();
+loadEnquiries();
 </script>
 </body>
 </html>

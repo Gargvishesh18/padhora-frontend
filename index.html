@@ -356,6 +356,31 @@
   .wa-btn:hover { transform: scale(1.06); box-shadow: 0 6px 16px rgba(79,203,139,0.45); }
   .card .wa-btn { background: var(--coral); }
   .card .wa-btn:hover { box-shadow: 0 6px 16px rgba(242,153,74,0.5); }
+  /* Primary "Request Tutor" CTA - replaces WhatsApp as the main conversion button */
+  .request-btn {
+    background: var(--coral); color: white; border: none; cursor: pointer; text-decoration: none;
+    font-family: inherit; font-size: 13px; font-weight: 700; padding: 9px 16px; border-radius: 999px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .request-btn:hover { transform: scale(1.06); box-shadow: 0 6px 16px rgba(242,153,74,0.5); }
+  .card .request-btn { background: var(--mint); }
+  .card .request-btn:hover { box-shadow: 0 6px 16px rgba(79,203,139,0.45); }
+  /* WhatsApp is now secondary - a plain link, not a filled button */
+  .wa-link-secondary {
+    display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 700;
+    color: var(--mint); text-decoration: none; padding: 9px 6px;
+  }
+  .wa-link-secondary:hover { text-decoration: underline; }
+  .modal-actions .wa-link-secondary { flex: 0 0 auto; justify-content: center; }
+  .otp-digits { display: flex; gap: 8px; }
+  .otp-digits input { text-align: center; letter-spacing: 2px; font-family: 'Space Mono', monospace; font-size: 18px; }
+  .request-success-icon { width: 56px; height: 56px; border-radius: 50%; background: rgba(76,154,106,0.14); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 26px; }
+  .my-req-card { border: 1.5px solid var(--line); border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; }
+  .my-req-card .status-pill { display: inline-block; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 999px; margin-top: 6px; }
+  .status-NEW, .status-VIEWED { background: rgba(46,109,164,0.12); color: var(--violet); }
+  .status-ACCEPTED, .status-CONNECTED { background: rgba(76,154,106,0.14); color: var(--mint); }
+  .status-TUITION_STARTED, .status-COMPLETED { background: rgba(76,154,106,0.25); color: #2C8A5F; }
+  .status-DECLINED, .status-EXPIRED { background: rgba(242,153,74,0.16); color: var(--coral); }
 
   /* HOW IT WORKS */
   .how { background: linear-gradient(135deg, var(--violet), var(--violet-deep)); color: var(--sand); border-radius: 24px; padding: 52px 44px; margin: 24px 0; position: relative; overflow: hidden; }
@@ -557,6 +582,7 @@
     <div class="nav-links">
       <a href="#browse">Find a tutor</a>
       <a href="#how">How it works</a>
+      <a href="javascript:void(0)" onclick="openMyRequests()">My requests</a>
       <a href="signup.html">List your tuition</a>
       <a href="login.html">Tutor login</a>
     </div>
@@ -833,6 +859,8 @@
 
   <div class="modal-backdrop" id="modal-backdrop"><div class="modal" id="modal-content"></div></div>
   <div class="modal-backdrop" id="listing-backdrop"><div class="modal" id="listing-content"></div></div>
+  <div class="modal-backdrop" id="request-backdrop"><div class="modal" id="request-content"></div></div>
+  <div class="modal-backdrop" id="myrequests-backdrop"><div class="modal" id="myrequests-content"></div></div>
 
   <footer>
     <div class="footer-inner">
@@ -894,9 +922,13 @@ function waLink(phone, tutorName) {
   return `https://wa.me/${withCountryCode}?text=${encodeURIComponent(message)}`;
 }
 
+const tutorsById = {};
+
 function render(list, hasLocation) {
   const headingEl = document.getElementById('browse-heading');
   if (headingEl) headingEl.textContent = hasLocation ? 'Tutors near you' : 'All tutors';
+
+  list.forEach(t => { tutorsById[t.id] = t; });
 
   grid.innerHTML = '';
   if (list.length === 0) {
@@ -926,7 +958,7 @@ function render(list, hasLocation) {
       <div class="tag-row"><span class="tag mode-tag">${modesDisplay(t)}</span>${(t.types || []).map(ty => `<span class="tag">${ty}</span>`).join('')}</div>
       <div class="card-footer">
         <div class="price">${priceDisplay(t)}</div>
-        <a class="wa-btn" href="${waLink(t.phone, t.name)}" target="_blank" rel="noopener" onclick="event.stopPropagation();">WhatsApp</a>
+        <button class="request-btn" onclick="event.stopPropagation(); openRequestForm(${t.id});">Request Tutor</button>
       </div>
       <div class="card-tray"><span></span><span></span><span></span></div>`;
     card.addEventListener('click', () => openModal(t));
@@ -987,7 +1019,12 @@ function openModal(t) {
     ${embedUrl ? `<div class="modal-video"><iframe src="${embedUrl}" title="${t.name} intro video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>` : ''}
     <div class="price" style="margin: 10px 0;">${priceDisplay(t)}</div>
     ${testimonials.length ? `<div class="modal-reviews"><h4>What parents say</h4>${testimonials.map(r => `<div class="mini-review">${r}</div>`).join('')}</div>` : ''}
-    <div class="modal-actions"><a class="wa-btn" href="${waLink(t.phone, t.name)}" target="_blank" rel="noopener">Message on WhatsApp</a></div>`;
+    <div class="modal-actions">
+      <button class="request-btn" style="flex:1;padding:13px;" onclick="openRequestForm(${t.id});">Request Tutor</button>
+    </div>
+    <div style="text-align:center;margin-top:8px;">
+      <a class="wa-link-secondary" href="${waLink(t.phone, t.name)}" target="_blank" rel="noopener">💬 Or message on WhatsApp</a>
+    </div>`;
   backdrop.classList.add('open');
   Array.from(modalContent.children).forEach((el, i) => {
     el.classList.add('modal-item');
@@ -997,6 +1034,262 @@ function openModal(t) {
 function closeModal() { backdrop.classList.remove('open'); }
 backdrop.addEventListener('click', (e) => { if (e.target === backdrop) closeModal(); });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+
+/* ============================================
+   REQUEST TUTOR FLOW
+   Parent -> Tutor Profile -> Request Tutor -> Padhora records enquiry -> tutor responds.
+   Replaces "WhatsApp is the only conversion" with a tracked enquiry Padhora owns.
+   ============================================ */
+const requestBackdrop = document.getElementById('request-backdrop');
+const requestContent = document.getElementById('request-content');
+
+function closeRequestForm() { requestBackdrop.classList.remove('open'); }
+requestBackdrop.addEventListener('click', (e) => { if (e.target === requestBackdrop) closeRequestForm(); });
+
+function myRequestsStorage() {
+  try { return JSON.parse(localStorage.getItem('padhora_my_requests') || '[]'); }
+  catch (e) { return []; }
+}
+function saveMyRequest(entry) {
+  const list = myRequestsStorage();
+  list.unshift(entry);
+  localStorage.setItem('padhora_my_requests', JSON.stringify(list.slice(0, 30)));
+}
+
+function openRequestForm(tutorId) {
+  const t = tutorsById[tutorId];
+  if (!t) return;
+  closeModal();
+
+  // Pre-fill from whatever the parent already told us via search filters + this tutor's own subjects,
+  // so the form feels like "confirm", not "start from scratch".
+  const savedName = localStorage.getItem('padhora_parent_name') || '';
+  const savedPhone = localStorage.getItem('padhora_parent_phone') || '';
+  const prefillLocality = document.getElementById('f-locality')?.value || t.locality || '';
+  const prefillMode = activeMode || (t.modes && t.modes[0]) || '';
+  const classOptions = (t.gradeSubjects || []).map(gs => gs.grade).filter(Boolean);
+  const subjectOptions = [...new Set((t.gradeSubjects || []).flatMap(gs => (gs.subjects || '').split(',').map(s => s.trim()).filter(Boolean)))];
+
+  requestContent.innerHTML = `
+    <button class="modal-close" onclick="closeRequestForm()" aria-label="Close">×</button>
+    <h3>Request ${t.name}</h3>
+    <p style="font-size:13px;color:var(--slate);margin:6px 0 18px;">Takes a few seconds. ${t.name} will get your request and can respond right here on Padhora.</p>
+    <form id="request-form">
+      <div class="form-field"><label>Your name</label><input type="text" id="rf-parent-name" value="${savedName}" required></div>
+      <div class="form-field"><label>Your phone (WhatsApp)</label><input type="tel" id="rf-parent-phone" value="${savedPhone}" required></div>
+      <div class="form-field">
+        <label>Class</label>
+        ${classOptions.length
+          ? `<select id="rf-class"><option value="">Select</option>${classOptions.map(c => `<option>${c}</option>`).join('')}<option value="Others">Others</option></select>`
+          : `<input type="text" id="rf-class" placeholder="e.g. Class 10">`}
+      </div>
+      <div class="form-field">
+        <label>Subject</label>
+        ${subjectOptions.length
+          ? `<select id="rf-subject"><option value="">Select</option>${subjectOptions.map(s => `<option>${s}</option>`).join('')}<option value="Others">Others</option></select>`
+          : `<input type="text" id="rf-subject" placeholder="e.g. Mathematics">`}
+      </div>
+      <div class="form-field">
+        <label>Preferred mode</label>
+        <select id="rf-mode">
+          ${(t.modes && t.modes.length ? t.modes : ["At tutor's home", "Tutor comes to you", "Online"]).map(m => `<option ${m === prefillMode ? 'selected' : ''}>${m}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-field"><label>Locality</label><input type="text" id="rf-locality" value="${prefillLocality}" placeholder="e.g. Phase 5, Mohali"></div>
+      <div class="form-field">
+        <label>Preferred timing</label>
+        <input type="text" id="rf-timing" placeholder="e.g. Weekday evenings">
+      </div>
+      <div class="form-field"><label>Approximate budget</label><input type="text" id="rf-budget" placeholder="e.g. ₹4000-5000/month"></div>
+      <div class="form-field"><label>Anything else? (optional)</label><textarea id="rf-message" placeholder="Any specific requirement..."></textarea></div>
+      <button type="submit" class="submit-btn" id="rf-submit-btn">Send Request</button>
+      <div class="save-msg" id="rf-error" style="color:var(--coral);"></div>
+    </form>`;
+
+  document.getElementById('request-form').addEventListener('submit', (e) => submitRequestForm(e, t));
+  requestBackdrop.classList.add('open');
+}
+
+async function submitRequestForm(e, tutor) {
+  e.preventDefault();
+  const btn = document.getElementById('rf-submit-btn');
+  const errEl = document.getElementById('rf-error');
+  errEl.textContent = '';
+  btn.disabled = true; btn.textContent = 'Sending...';
+
+  const parentName = document.getElementById('rf-parent-name').value.trim();
+  const parentPhone = document.getElementById('rf-parent-phone').value.trim();
+  const body = {
+    tutorId: tutor.id,
+    parentName,
+    parentPhone,
+    className: document.getElementById('rf-class').value,
+    subject: document.getElementById('rf-subject').value,
+    mode: document.getElementById('rf-mode').value,
+    locality: document.getElementById('rf-locality').value,
+    preferredTiming: document.getElementById('rf-timing').value,
+    budget: document.getElementById('rf-budget').value,
+    message: document.getElementById('rf-message').value,
+  };
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/enquiries`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Could not send your request.');
+
+    localStorage.setItem('padhora_parent_name', parentName);
+    localStorage.setItem('padhora_parent_phone', parentPhone);
+    saveMyRequest({ id: data.id, publicToken: data.publicToken, tutorName: tutor.name });
+
+    showRequestSuccess(tutor, data.publicToken);
+  } catch (err) {
+    errEl.textContent = err.message || 'Something went wrong. Please try again.';
+    btn.disabled = false; btn.textContent = 'Send Request';
+  }
+}
+
+function showRequestSuccess(tutor, publicToken) {
+  requestContent.innerHTML = `
+    <button class="modal-close" onclick="closeRequestForm()" aria-label="Close">×</button>
+    <div class="request-success-icon">✓</div>
+    <h3 style="text-align:center;">Your request has been sent.</h3>
+    <p style="font-size:13.5px;color:var(--slate);line-height:1.6;text-align:center;margin:10px 0 22px;">
+      ${tutor.name} has received your request and can respond here on Padhora. You can check the status anytime under "My requests".
+    </p>
+    <div class="modal-actions">
+      <button class="request-btn" style="flex:1;padding:13px;" onclick="closeRequestForm()">Continue on Padhora</button>
+    </div>
+    <div style="text-align:center;margin-top:8px;">
+      <a class="wa-link-secondary" href="${waLink(tutor.phone, tutor.name)}" target="_blank" rel="noopener" onclick="trackWhatsappClick('${publicToken}')">💬 Or message on WhatsApp now</a>
+    </div>`;
+}
+
+function trackWhatsappClick(publicToken) {
+  // Fire-and-forget - WhatsApp opens in a new tab regardless of whether this succeeds.
+  fetch(`${API_BASE_URL}/api/enquiries/track/${publicToken}/whatsapp-click`, { method: 'PATCH' }).catch(() => {});
+}
+
+/* ============================================
+   MY REQUESTS
+   No login - identity is phone number, proven with a (currently stubbed) OTP.
+   ============================================ */
+const myReqBackdrop = document.getElementById('myrequests-backdrop');
+const myReqContent = document.getElementById('myrequests-content');
+function closeMyRequests() { myReqBackdrop.classList.remove('open'); }
+myReqBackdrop.addEventListener('click', (e) => { if (e.target === myReqBackdrop) closeMyRequests(); });
+
+function openMyRequests() {
+  const sessionToken = localStorage.getItem('padhora_session_token');
+  if (sessionToken) {
+    loadMyRequestsList();
+  } else {
+    renderPhoneEntryStep();
+  }
+  myReqBackdrop.classList.add('open');
+}
+
+function renderPhoneEntryStep() {
+  const savedPhone = localStorage.getItem('padhora_parent_phone') || '';
+  myReqContent.innerHTML = `
+    <button class="modal-close" onclick="closeMyRequests()" aria-label="Close">×</button>
+    <h3>My Requests</h3>
+    <p style="font-size:13px;color:var(--slate);margin:6px 0 18px;">Enter the phone number you used when requesting a tutor. We'll text you a code to confirm it's you.</p>
+    <div class="form-field"><label>Phone number</label><input type="tel" id="mr-phone" value="${savedPhone}"></div>
+    <button class="submit-btn" id="mr-send-otp-btn" onclick="sendMyRequestsOtp()">Send code</button>
+    <div class="save-msg" id="mr-error" style="color:var(--coral);"></div>`;
+}
+
+async function sendMyRequestsOtp() {
+  const phone = document.getElementById('mr-phone').value.trim();
+  const errEl = document.getElementById('mr-error');
+  const btn = document.getElementById('mr-send-otp-btn');
+  errEl.textContent = '';
+  if (!phone) { errEl.textContent = 'Enter your phone number.'; return; }
+  btn.disabled = true; btn.textContent = 'Sending...';
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/enquiries/request-otp`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Could not send code.');
+    renderOtpStep(phone, data.devOtp);
+  } catch (err) {
+    errEl.textContent = err.message;
+    btn.disabled = false; btn.textContent = 'Send code';
+  }
+}
+
+function renderOtpStep(phone, devOtp) {
+  myReqContent.innerHTML = `
+    <button class="modal-close" onclick="closeMyRequests()" aria-label="Close">×</button>
+    <h3>Enter the code</h3>
+    <p style="font-size:13px;color:var(--slate);margin:6px 0 18px;">We sent a 4-digit code to ${phone}.</p>
+    ${devOtp ? `<p style="font-size:12px;background:#F9F8FF;border:1px dashed var(--line);border-radius:10px;padding:8px 12px;color:var(--violet);">Dev mode (no SMS provider connected yet): your code is <b>${devOtp}</b></p>` : ''}
+    <div class="form-field"><label>4-digit code</label><input type="tel" maxlength="4" id="mr-otp" placeholder="0000"></div>
+    <button class="submit-btn" id="mr-verify-btn" onclick="verifyMyRequestsOtp('${phone.replace(/'/g, "\\'")}')">Verify</button>
+    <div class="save-msg" id="mr-error" style="color:var(--coral);"></div>
+    <p style="text-align:center;margin-top:12px;"><a href="javascript:void(0)" onclick="renderPhoneEntryStep()" style="font-size:12.5px;color:var(--slate);">Use a different number</a></p>`;
+}
+
+async function verifyMyRequestsOtp(phone) {
+  const code = document.getElementById('mr-otp').value.trim();
+  const errEl = document.getElementById('mr-error');
+  const btn = document.getElementById('mr-verify-btn');
+  errEl.textContent = '';
+  btn.disabled = true; btn.textContent = 'Verifying...';
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/enquiries/verify-otp`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone, code })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Incorrect code.');
+    localStorage.setItem('padhora_session_token', data.sessionToken);
+    localStorage.setItem('padhora_parent_phone', phone);
+    loadMyRequestsList();
+  } catch (err) {
+    errEl.textContent = err.message;
+    btn.disabled = false; btn.textContent = 'Verify';
+  }
+}
+
+function statusLabel(status) {
+  return ({
+    NEW: 'Waiting for tutor response', VIEWED: 'Waiting for tutor response',
+    ACCEPTED: 'Accepted', CONNECTED: 'Connected', TUITION_STARTED: 'Tuition started',
+    COMPLETED: 'Completed', DECLINED: 'Declined', EXPIRED: 'Expired',
+  })[status] || status;
+}
+
+async function loadMyRequestsList() {
+  myReqContent.innerHTML = `<button class="modal-close" onclick="closeMyRequests()" aria-label="Close">×</button><h3>My Requests</h3><p style="color:var(--slate);font-size:13px;margin-top:10px;">Loading...</p>`;
+  const sessionToken = localStorage.getItem('padhora_session_token');
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/enquiries/mine`, { headers: { 'X-Session-Token': sessionToken } });
+    if (res.status === 401) {
+      localStorage.removeItem('padhora_session_token');
+      renderPhoneEntryStep();
+      return;
+    }
+    const list = await res.json();
+    myReqContent.innerHTML = `
+      <button class="modal-close" onclick="closeMyRequests()" aria-label="Close">×</button>
+      <h3>My Requests</h3>
+      ${list.length === 0 ? `<p style="color:var(--slate);font-size:13.5px;margin-top:14px;">No requests yet. Find a tutor and hit "Request Tutor" to get started.</p>` : ''}
+      <div style="margin-top:16px;">
+        ${list.map(r => `
+          <div class="my-req-card">
+            <div style="font-weight:700;">${r.subject || 'Tuition'}${r.className ? ' • ' + r.className : ''}</div>
+            <div style="font-size:12.5px;color:var(--slate);margin-top:2px;">${new Date(r.createdAt).toLocaleDateString()}</div>
+            <span class="status-pill status-${r.status}">${statusLabel(r.status)}</span>
+          </div>`).join('')}
+      </div>
+      <p style="text-align:center;margin-top:10px;"><a href="javascript:void(0)" onclick="localStorage.removeItem('padhora_session_token'); renderPhoneEntryStep();" style="font-size:12px;color:var(--slate);">Not you? Switch number</a></p>`;
+  } catch (err) {
+    myReqContent.innerHTML = `<button class="modal-close" onclick="closeMyRequests()" aria-label="Close">×</button><h3>My Requests</h3><p style="color:var(--coral);font-size:13px;margin-top:14px;">Couldn't load your requests. Please try again.</p>`;
+  }
+}
 
 /* FAQ accordion */
 document.querySelectorAll('.faq-q').forEach(btn => {

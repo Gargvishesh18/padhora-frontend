@@ -372,8 +372,6 @@
   }
   .wa-link-secondary:hover { text-decoration: underline; }
   .modal-actions .wa-link-secondary { flex: 0 0 auto; justify-content: center; }
-  .otp-digits { display: flex; gap: 8px; }
-  .otp-digits input { text-align: center; letter-spacing: 2px; font-family: 'Space Mono', monospace; font-size: 18px; }
   .request-success-icon { width: 56px; height: 56px; border-radius: 50%; background: rgba(76,154,106,0.14); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 26px; }
   .my-req-card { border: 1.5px solid var(--line); border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; }
   .my-req-card .status-pill { display: inline-block; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 999px; margin-top: 6px; }
@@ -1144,7 +1142,7 @@ async function submitRequestForm(e, tutor) {
 
     showRequestSuccess(tutor, data.publicToken);
   } catch (err) {
-    errEl.textContent = err.message || 'Something went wrong. Please try again.';
+    errEl.textContent = friendlyErrorMessage(err);
     btn.disabled = false; btn.textContent = 'Send Request';
   }
 }
@@ -1176,6 +1174,13 @@ function trackAnalyticsEvent(eventType, tutorId) {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ eventType, tutorId })
   }).catch(() => {});
+}
+
+// Turns a raw fetch/network error ("Failed to fetch", "NetworkError...") into something a
+// parent can actually act on, instead of showing them a browser-internal error string.
+function friendlyErrorMessage(err) {
+  if (err instanceof TypeError) return "Can't reach Padhora right now - check your connection and try again.";
+  return err.message || 'Something went wrong. Please try again.';
 }
 
 /* ============================================
@@ -1271,7 +1276,7 @@ async function sendMyRequestsOtp() {
     if (!res.ok) throw new Error(data.error || 'Could not send code.');
     renderOtpStep(phone, data.devOtp);
   } catch (err) {
-    errEl.textContent = err.message;
+    errEl.textContent = friendlyErrorMessage(err);
     btn.disabled = false; btn.textContent = 'Send code';
   }
 }
@@ -1304,7 +1309,7 @@ async function verifyMyRequestsOtp(phone) {
     localStorage.setItem('padhora_parent_phone', phone);
     loadCombinedRequests();
   } catch (err) {
-    errEl.textContent = err.message;
+    errEl.textContent = friendlyErrorMessage(err);
     btn.disabled = false; btn.textContent = 'Verify';
   }
 }

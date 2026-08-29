@@ -1021,9 +1021,6 @@ function openModal(t) {
     ${testimonials.length ? `<div class="modal-reviews"><h4>What parents say</h4>${testimonials.map(r => `<div class="mini-review">${r}</div>`).join('')}</div>` : ''}
     <div class="modal-actions">
       <button class="request-btn" style="flex:1;padding:13px;" onclick="openRequestForm(${t.id});">Request Tutor</button>
-    </div>
-    <div style="text-align:center;margin-top:8px;">
-      <a class="wa-link-secondary" href="${waLink(t.phone, t.name)}" target="_blank" rel="noopener">💬 Or message on WhatsApp</a>
     </div>`;
   backdrop.classList.add('open');
   Array.from(modalContent.children).forEach((el, i) => {
@@ -1280,7 +1277,8 @@ async function loadMyRequestsList() {
       <div style="margin-top:16px;">
         ${list.map(r => `
           <div class="my-req-card">
-            <div style="font-weight:700;">${r.subject || 'Tuition'}${r.className ? ' • ' + r.className : ''}</div>
+            <div style="font-weight:700;">${r.tutorName || 'Tutor'}</div>
+            <div style="font-size:13px;color:var(--ink);margin-top:2px;">${r.subject || 'Tuition'}${r.className ? ' • ' + r.className : ''}</div>
             <div style="font-size:12.5px;color:var(--slate);margin-top:2px;">${new Date(r.createdAt).toLocaleDateString()}</div>
             <span class="status-pill status-${r.status}">${statusLabel(r.status)}</span>
           </div>`).join('')}

@@ -1001,6 +1001,7 @@ document.querySelectorAll('#mode-chips .mini-chip').forEach(chip => {
 const backdrop = document.getElementById('modal-backdrop');
 const modalContent = document.getElementById('modal-content');
 function openModal(t) {
+  trackAnalyticsEvent('PROFILE_VIEWED', t.id);
   const years = t.yearsExperience || t.years;
   const testimonials = t.testimonials || [];
   const embedUrl = youtubeEmbedUrl(t.videoUrl);
@@ -1056,6 +1057,7 @@ function saveMyRequest(entry) {
 function openRequestForm(tutorId) {
   const t = tutorsById[tutorId];
   if (!t) return;
+  trackAnalyticsEvent('REQUEST_STARTED', tutorId);
   closeModal();
 
   // Pre-fill from whatever the parent already told us via search filters + this tutor's own subjects,
@@ -1077,14 +1079,14 @@ function openRequestForm(tutorId) {
       <div class="form-field">
         <label>Class</label>
         ${classOptions.length
-          ? `<select id="rf-class"><option value="">Select</option>${classOptions.map(c => `<option>${c}</option>`).join('')}<option value="Others">Others</option></select>`
-          : `<input type="text" id="rf-class" placeholder="e.g. Class 10">`}
+          ? `<select id="rf-class" required><option value="">Select</option>${classOptions.map(c => `<option>${c}</option>`).join('')}<option value="Others">Others</option></select>`
+          : `<input type="text" id="rf-class" placeholder="e.g. Class 10" required>`}
       </div>
       <div class="form-field">
         <label>Subject</label>
         ${subjectOptions.length
-          ? `<select id="rf-subject"><option value="">Select</option>${subjectOptions.map(s => `<option>${s}</option>`).join('')}<option value="Others">Others</option></select>`
-          : `<input type="text" id="rf-subject" placeholder="e.g. Mathematics">`}
+          ? `<select id="rf-subject" required><option value="">Select</option>${subjectOptions.map(s => `<option>${s}</option>`).join('')}<option value="Others">Others</option></select>`
+          : `<input type="text" id="rf-subject" placeholder="e.g. Mathematics" required>`}
       </div>
       <div class="form-field">
         <label>Preferred mode</label>
@@ -1168,6 +1170,14 @@ function trackWhatsappClick(publicToken) {
   fetch(`${API_BASE_URL}/api/enquiries/track/${publicToken}/whatsapp-click`, { method: 'PATCH' }).catch(() => {});
 }
 
+function trackAnalyticsEvent(eventType, tutorId) {
+  // Fire-and-forget - never blocks or affects what the user sees.
+  fetch(`${API_BASE_URL}/api/analytics/event`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ eventType, tutorId })
+  }).catch(() => {});
+}
+
 /* ============================================
    MY REQUESTS
    No login - identity is phone number, proven with a (currently stubbed) OTP.
@@ -1178,13 +1188,61 @@ function closeMyRequests() { myReqBackdrop.classList.remove('open'); }
 myReqBackdrop.addEventListener('click', (e) => { if (e.target === myReqBackdrop) closeMyRequests(); });
 
 function openMyRequests() {
-  const sessionToken = localStorage.getItem('padhora_session_token');
-  if (sessionToken) {
-    loadMyRequestsList();
-  } else {
-    renderPhoneEntryStep();
-  }
+  loadCombinedRequests();
   myReqBackdrop.classList.add('open');
+}
+
+// Shows requests instantly for this device (via the public track token - no OTP needed),
+// merged with the fuller phone-verified list if the parent has already verified this session.
+// This is what actually uses the /track/{token} endpoint - previously it was wired on the
+// backend but nothing in the UI ever called it.
+async function loadCombinedRequests() {
+  myReqContent.innerHTML = `<button class="modal-close" onclick="closeMyRequests()" aria-label="Close">×</button><h3>My Requests</h3><p style="color:var(--slate);font-size:13px;margin-top:10px;">Loading...</p>`;
+
+  const local = myRequestsStorage();
+  const localResults = await Promise.all(local.map(r =>
+    fetch(`${API_BASE_URL}/api/enquiries/track/${r.publicToken}`).then(res => res.ok ? res.json() : null).catch(() => null)
+  ));
+  const byId = new Map();
+  localResults.filter(Boolean).forEach(r => byId.set(r.id, r));
+
+  const sessionToken = localStorage.getItem('padhora_session_token');
+  let verified = false;
+  if (sessionToken) {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/enquiries/mine`, { headers: { 'X-Session-Token': sessionToken } });
+      if (res.status === 401) {
+        localStorage.removeItem('padhora_session_token');
+      } else if (res.ok) {
+        verified = true;
+        (await res.json()).forEach(r => byId.set(r.id, r));
+      }
+    } catch (err) { /* fall back to local-only results below */ }
+  }
+
+  const list = [...byId.values()].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  renderMyRequestsList(list, verified);
+}
+
+function renderMyRequestsList(list, verified) {
+  myReqContent.innerHTML = `
+    <button class="modal-close" onclick="closeMyRequests()" aria-label="Close">×</button>
+    <h3>My Requests</h3>
+    ${list.length === 0 ? `<p style="color:var(--slate);font-size:13.5px;margin-top:14px;">No requests yet. Find a tutor and hit "Request Tutor" to get started.</p>` : ''}
+    <div style="margin-top:16px;">
+      ${list.map(r => `
+        <div class="my-req-card">
+          <div style="font-weight:700;">${r.tutorName || 'Tutor'}</div>
+          <div style="font-size:13px;color:var(--ink);margin-top:2px;">${r.subject || 'Tuition'}${r.className ? ' • ' + r.className : ''}</div>
+          <div style="font-size:12.5px;color:var(--slate);margin-top:2px;">${new Date(r.createdAt).toLocaleDateString()}</div>
+          <span class="status-pill status-${r.status}">${statusLabel(r.status)}</span>
+        </div>`).join('')}
+    </div>
+    <p style="text-align:center;margin-top:10px;">
+      ${verified
+        ? `<a href="javascript:void(0)" onclick="localStorage.removeItem('padhora_session_token'); renderPhoneEntryStep();" style="font-size:12px;color:var(--slate);">Not you? Switch number</a>`
+        : `<a href="javascript:void(0)" onclick="renderPhoneEntryStep()" style="font-size:12.5px;color:var(--violet);font-weight:700;">Verify your phone to see requests from other devices too</a>`}
+    </p>`;
 }
 
 function renderPhoneEntryStep() {
@@ -1244,7 +1302,7 @@ async function verifyMyRequestsOtp(phone) {
     if (!res.ok) throw new Error(data.error || 'Incorrect code.');
     localStorage.setItem('padhora_session_token', data.sessionToken);
     localStorage.setItem('padhora_parent_phone', phone);
-    loadMyRequestsList();
+    loadCombinedRequests();
   } catch (err) {
     errEl.textContent = err.message;
     btn.disabled = false; btn.textContent = 'Verify';
@@ -1260,33 +1318,9 @@ function statusLabel(status) {
 }
 
 async function loadMyRequestsList() {
-  myReqContent.innerHTML = `<button class="modal-close" onclick="closeMyRequests()" aria-label="Close">×</button><h3>My Requests</h3><p style="color:var(--slate);font-size:13px;margin-top:10px;">Loading...</p>`;
-  const sessionToken = localStorage.getItem('padhora_session_token');
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/enquiries/mine`, { headers: { 'X-Session-Token': sessionToken } });
-    if (res.status === 401) {
-      localStorage.removeItem('padhora_session_token');
-      renderPhoneEntryStep();
-      return;
-    }
-    const list = await res.json();
-    myReqContent.innerHTML = `
-      <button class="modal-close" onclick="closeMyRequests()" aria-label="Close">×</button>
-      <h3>My Requests</h3>
-      ${list.length === 0 ? `<p style="color:var(--slate);font-size:13.5px;margin-top:14px;">No requests yet. Find a tutor and hit "Request Tutor" to get started.</p>` : ''}
-      <div style="margin-top:16px;">
-        ${list.map(r => `
-          <div class="my-req-card">
-            <div style="font-weight:700;">${r.tutorName || 'Tutor'}</div>
-            <div style="font-size:13px;color:var(--ink);margin-top:2px;">${r.subject || 'Tuition'}${r.className ? ' • ' + r.className : ''}</div>
-            <div style="font-size:12.5px;color:var(--slate);margin-top:2px;">${new Date(r.createdAt).toLocaleDateString()}</div>
-            <span class="status-pill status-${r.status}">${statusLabel(r.status)}</span>
-          </div>`).join('')}
-      </div>
-      <p style="text-align:center;margin-top:10px;"><a href="javascript:void(0)" onclick="localStorage.removeItem('padhora_session_token'); renderPhoneEntryStep();" style="font-size:12px;color:var(--slate);">Not you? Switch number</a></p>`;
-  } catch (err) {
-    myReqContent.innerHTML = `<button class="modal-close" onclick="closeMyRequests()" aria-label="Close">×</button><h3>My Requests</h3><p style="color:var(--coral);font-size:13px;margin-top:14px;">Couldn't load your requests. Please try again.</p>`;
-  }
+  // Superseded by loadCombinedRequests() (also merges in this device's requests via
+  // /track/{token}, no OTP needed) - kept as a thin alias in case anything still calls it.
+  loadCombinedRequests();
 }
 
 /* FAQ accordion */

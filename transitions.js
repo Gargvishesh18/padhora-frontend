@@ -17,6 +17,15 @@
     document.addEventListener('DOMContentLoaded', reveal);
   }
 
+  // Browser back/forward (trackpad swipe, back button) often restores the
+  // page from bfcache in the exact frozen DOM state it was left in — if
+  // that was mid-fade-out (pt-loading still on, opacity 0), the page just
+  // sits invisible until a manual reload. pageshow fires on every show,
+  // including bfcache restores, so always clear the class here too.
+  window.addEventListener('pageshow', function () {
+    document.documentElement.classList.remove('pt-loading');
+  });
+
   if (prefersReduced) return;
 
   document.addEventListener('click', function (e) {

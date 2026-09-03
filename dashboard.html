@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>My listing — Padhora</title>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script>document.documentElement.classList.add('pt-loading');</script>
 <style>
   :root {
     --violet: #2E6DA4; --violet-deep: #1B4A73; --coral: #F2994A; --mint: #4C9A6A;
@@ -18,7 +19,9 @@
       linear-gradient(90deg, rgba(46,109,164,0.06) 1px, transparent 1px);
     background-size: 28px 28px;
     font-family: 'Nunito', sans-serif; color: var(--ink); padding: 24px 16px 60px;
+    transition: opacity 0.18s ease;
   }
+  html.pt-loading body { opacity: 0; }
   @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
   .wrap { max-width: 640px; margin: 0 auto; }
   .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
@@ -540,5 +543,6 @@ async function updateEnquiryStatus(id, status) {
 loadProfile();
 loadEnquiries();
 </script>
+<script src="transitions.js"></script>
 </body>
 </html>

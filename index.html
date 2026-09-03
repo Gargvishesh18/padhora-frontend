@@ -60,8 +60,16 @@
   /* NAV */
   nav {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 22px 0; position: relative; z-index: 10;
+    padding: 22px 0; position: relative; z-index: 20;
   }
+  .nav-toggle {
+    display: none; flex-direction: column; justify-content: center; align-items: center; gap: 5px;
+    width: 38px; height: 38px; background: none; border: none; cursor: pointer; padding: 0; flex: 0 0 auto;
+  }
+  .nav-toggle span { display: block; width: 22px; height: 2.5px; background: var(--violet); border-radius: 2px; transition: transform 0.25s ease, opacity 0.2s ease; }
+  .nav-toggle.open span:nth-child(1) { transform: translateY(7.5px) rotate(45deg); }
+  .nav-toggle.open span:nth-child(2) { opacity: 0; }
+  .nav-toggle.open span:nth-child(3) { transform: translateY(-7.5px) rotate(-45deg); }
   .logo {
     font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 26px; letter-spacing: -0.5px; line-height: 1;
   }
@@ -178,12 +186,27 @@
     padding: 6px 6px 6px 18px;
   }
   .search-pin { flex: 0 0 auto; }
+  .locality-input-wrap { position: relative; flex: 1 1 auto; min-width: 0; display: flex; align-items: center; }
   .search-primary input {
     flex: 1 1 auto; border: none; background: transparent; font-family: 'Nunito', sans-serif;
-    font-size: 16px; font-weight: 600; color: var(--ink); padding: 12px 4px; min-width: 0;
+    font-size: 16px; font-weight: 600; color: var(--ink); padding: 12px 26px 12px 4px; min-width: 0; width: 100%;
   }
   .search-primary input:focus { outline: none; }
   .search-primary input::placeholder { color: var(--slate); font-weight: 500; }
+  .locality-clear-btn {
+    position: absolute; right: 2px; top: 50%; transform: translateY(-50%);
+    width: 22px; height: 22px; border-radius: 50%; border: none; cursor: pointer;
+    background: rgba(61,43,125,0.1); color: var(--slate); font-size: 11px; line-height: 1;
+    display: flex; align-items: center; justify-content: center; padding: 0;
+  }
+  .locality-clear-btn:hover { background: rgba(61,43,125,0.18); color: var(--violet); }
+  .use-location-btn {
+    display: inline-flex; align-items: center; gap: 6px; margin: 10px 0 0 8px;
+    background: none; border: none; color: var(--violet); font-weight: 700; font-size: 13px;
+    cursor: pointer; padding: 4px 2px; font-family: 'Nunito', sans-serif;
+  }
+  .use-location-btn:hover { text-decoration: underline; }
+  .use-location-btn:disabled { opacity: 0.6; cursor: wait; text-decoration: none; }
   .search-primary button {
     background: var(--coral); border: none; color: white; font-weight: 700; font-size: 14px;
     padding: 14px 24px; border-radius: 12px; cursor: pointer; flex: 0 0 auto; white-space: nowrap;
@@ -201,9 +224,10 @@
   .mini-chip.active { background: var(--violet); color: white; border-color: var(--violet); }
   @media (max-width: 640px) {
     .search-primary { flex-wrap: wrap; padding: 12px; }
-    .search-primary input { flex: 1 1 100%; order: 1; }
+    .locality-input-wrap { flex: 1 1 100%; order: 1; }
     .search-pin { order: 0; }
     .search-primary button { flex: 1 1 100%; order: 2; margin-top: 4px; }
+    .use-location-btn { margin-left: 2px; }
   }
   .distance-slider-wrap { margin-top: 12px; background: #EAF4FC; border-radius: 14px; padding: 16px; }
   .distance-slider-label { font-size: 13px; font-weight: 700; color: var(--violet); margin-bottom: 18px; }
@@ -262,7 +286,7 @@
   @media (max-width: 640px) {
     .chips {
       flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch;
-      padding-bottom: 6px; margin: 0 -24px; padding-left: 24px; padding-right: 24px;
+      padding-bottom: 6px; margin: 0 -12px; padding-left: 12px; padding-right: 12px;
       scrollbar-width: none;
     }
     .chips::-webkit-scrollbar { display: none; }
@@ -292,6 +316,36 @@
     background: var(--card); border-radius: 18px; border: 1.5px dashed var(--line);
   }
   .empty-state svg { margin-bottom: 14px; }
+  .search-loading {
+    grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 60px 20px; text-align: center;
+  }
+  .search-loading-icon { display: inline-block; font-size: 40px; animation: pencilWrite 0.9s ease-in-out infinite; }
+  @keyframes pencilWrite {
+    0%, 100% { transform: rotate(-14deg) translate(0, 0); }
+    50% { transform: rotate(10deg) translate(2px, -6px); }
+  }
+  .search-loading p {
+    margin-top: 14px; font-weight: 700; font-family: 'Fredoka', sans-serif; color: var(--violet); font-size: 15px;
+  }
+  .search-loading-dots span {
+    display: inline-block; animation: dotBounce 1.2s infinite; opacity: 0.3;
+  }
+  .search-loading-dots span:nth-child(2) { animation-delay: 0.15s; }
+  .search-loading-dots span:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes dotBounce { 0%, 100% { opacity: 0.3; } 40% { opacity: 1; } }
+  /* Results have landed — the pencil finishes with one quick tick-like flourish, then fades. */
+  .search-loading.done .search-loading-icon { animation: pencilFlourish 0.22s ease forwards; }
+  @keyframes pencilFlourish {
+    0% { transform: rotate(-14deg) translate(0, 0); }
+    55% { transform: rotate(20deg) translate(4px, -8px) scale(1.15); }
+    100% { transform: rotate(20deg) translate(4px, -8px) scale(0.85); opacity: 0; }
+  }
+  .search-loading.done p { transition: opacity 0.18s ease; opacity: 0; }
+  @media (prefers-reduced-motion: reduce) {
+    .search-loading-icon { animation: none; }
+    .search-loading-dots span { animation: none; opacity: 1; }
+  }
   .empty-state h3 { font-family: 'Fredoka', sans-serif; font-size: 18px; color: var(--ink); margin-bottom: 6px; }
   .empty-state p { font-size: 14px; }
   .card {
@@ -330,6 +384,22 @@
   .card:hover .avatar { transform: rotate(-8deg) scale(1.05); }
   .stamp { position: absolute; top: -10px; right: -14px; width: 32px; height: 32px; transition: transform 0.3s cubic-bezier(.34,1.56,.64,1); }
   .card:hover .stamp { transform: rotate(12deg) scale(1.1); }
+  .card {
+    opacity: 0; transform: translateY(14px);
+    animation: cardIn 0.4s cubic-bezier(.2,.8,.2,1) forwards;
+    animation-delay: var(--stagger-delay, 0s);
+  }
+  @keyframes cardIn { to { opacity: 1; transform: translateY(0); } }
+  .stamp-check {
+    stroke-dasharray: 26; stroke-dashoffset: 26;
+    animation: stampDraw 0.3s ease forwards;
+    animation-delay: calc(var(--stagger-delay, 0s) + 0.3s);
+  }
+  @keyframes stampDraw { to { stroke-dashoffset: 0; } }
+  @media (prefers-reduced-motion: reduce) {
+    .card { opacity: 1; transform: none; animation: none; }
+    .stamp-check { stroke-dashoffset: 0; animation: none; }
+  }
 
   .card h3 { font-family: 'Fredoka', sans-serif; font-size: 18px; font-weight: 700; margin-bottom: 4px; color: #F5F5F0; }
   .card .area { font-size: 13px; color: #C8D3CB; margin-bottom: 10px; }
@@ -547,9 +617,43 @@
   .add-row-btn:hover { border-color: var(--violet); }
 
   @media (max-width: 640px) {
-    nav .nav-links { display: none; }
-    .how-steps { grid-template-columns: 1fr; }
+    nav .nav-links {
+      display: none; flex-direction: column; gap: 2px;
+      position: absolute; top: calc(100% + 8px); left: 0; right: 0;
+      background: var(--card); border-radius: 16px; box-shadow: 0 16px 40px rgba(37,26,82,0.22);
+      padding: 8px; z-index: 20;
+    }
+    nav .nav-links.open { display: flex; }
+    nav .nav-links a { padding: 12px 10px; border-bottom: 1px solid var(--line); }
+    nav .nav-links a:last-child { border-bottom: none; }
+    nav .nav-links a::after { display: none; }
+    .nav-toggle { display: flex; }
     .search-card { flex-direction: column; }
+
+    /* Compact, scannable layouts instead of tall stacked cards.
+       Grid (not flex) so the icon spans two rows while title+description
+       stack in the second column at full width, instead of squeezing into
+       their own narrow flex columns. */
+    .section { padding: 40px 0; }
+    .why-grid { gap: 12px; }
+    .why-card {
+      display: grid; grid-template-columns: 40px 1fr; column-gap: 14px; row-gap: 2px;
+      align-items: start; padding: 16px;
+    }
+    .why-icon { grid-column: 1; grid-row: 1 / 3; width: 40px; height: 40px; margin-bottom: 0; }
+    .why-icon svg { width: 100%; height: 100%; }
+    .why-card h3 { grid-column: 2; grid-row: 1; font-size: 15px; margin-bottom: 0; }
+    .why-card p { grid-column: 2; grid-row: 2; font-size: 12.5px; }
+
+    .how { padding: 32px 24px; }
+    .how h2 { font-size: 24px; margin-bottom: 20px; }
+    .how-steps { grid-template-columns: 1fr; gap: 18px; }
+    .how-steps .step {
+      display: grid; grid-template-columns: 36px 1fr; column-gap: 14px; row-gap: 2px; align-items: start;
+    }
+    .step-icon { grid-column: 1; grid-row: 1 / 3; width: 36px; height: 36px; margin-bottom: 0; }
+    .how-steps .step h4 { grid-column: 2; grid-row: 1; font-size: 15px; margin-bottom: 0; }
+    .how-steps .step p { grid-column: 2; grid-row: 2; font-size: 12.5px; }
   }
 </style>
 </head>
@@ -577,14 +681,17 @@
 <div class="wrap">
   <nav>
     <div class="logo">Padhora<span class="dot">.</span><div class="tagline">Padho Aur Badho</div></div>
-    <div class="nav-links">
-      <a href="#browse">Find a tutor</a>
-      <a href="#how">How it works</a>
-      <a href="javascript:void(0)" onclick="openMyRequests()">My requests</a>
+    <div class="nav-links" id="nav-links">
+      <a href="#browse" onclick="closeMobileNav()">Find a tutor</a>
+      <a href="#how" onclick="closeMobileNav()">How it works</a>
+      <a href="javascript:void(0)" onclick="openMyRequests(); closeMobileNav();">My requests</a>
       <a href="signup.html">List your tuition</a>
       <a href="login.html">Tutor login</a>
     </div>
     <a href="signup.html" class="list-btn">List your tuition</a>
+    <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
+      <span></span><span></span><span></span>
+    </button>
   </nav>
 
   <section class="hero">
@@ -642,11 +749,15 @@
             <path d="M32 6 C20 6 11 15 11 27 C11 42 32 58 32 58 C32 58 53 42 53 27 C53 15 44 6 32 6 Z" fill="#2E6DA4"/>
             <circle cx="32" cy="27" r="8" fill="white"/>
           </svg>
-          <input type="text" id="f-locality" placeholder="Search your locality — e.g. Phase 5, Mohali" autocomplete="off">
+          <div class="locality-input-wrap">
+            <input type="text" id="f-locality" placeholder="Search your locality — e.g. Phase 5, Mohali" autocomplete="off">
+            <button type="button" class="locality-clear-btn" id="locality-clear-btn" aria-label="Clear locality" style="display:none;">✕</button>
+          </div>
           <input type="hidden" id="f-lat">
           <input type="hidden" id="f-lng">
           <button onclick="applyFilters(); scrollToResults();">Search tutors</button>
         </div>
+        <button type="button" class="use-location-btn" id="use-location-btn">📍 Use my current location</button>
 
         <div class="distance-slider-wrap" id="f-distance-wrap" style="display:none;">
           <div class="distance-slider-label">Search radius</div>
@@ -662,6 +773,18 @@
           <input type="hidden" id="f-distance" value="10">
         </div>
 
+        <div class="type-help-label">What kind of help does your child need? <span>(optional — you can select more than one)</span></div>
+        <div class="chips" id="chips">
+          <div class="chip active" data-type="">All types</div>
+          <div class="chip" data-type="Recurring Monthly">🔁 Recurring Monthly<small>Ongoing tuition</small></div>
+          <div class="chip" data-type="Admission Prep">🎓 Admission Prep<small>Getting into a school</small></div>
+          <div class="chip" data-type="Holiday Homework">📚 Holiday Homework<small>Break catch-up</small></div>
+          <div class="chip" data-type="Writing Improvement">✍️ Writing Improvement<small>Handwriting &amp; writing</small></div>
+          <div class="chip" data-type="Exam Prep">📝 Exam Prep<small>Board / school exams</small></div>
+          <div class="chip" data-type="Subject-Specific">📖 Subject-Specific<small>One subject only</small></div>
+        </div>
+
+        <div class="type-help-label">How would you like the tuition? <span>(optional — tap to filter)</span></div>
         <div class="search-secondary">
           <div class="mini-chip-group" id="mode-chips">
             <div class="mini-chip active" data-mode="">All modes</div>
@@ -670,17 +793,6 @@
             <div class="mini-chip" data-mode="Online">💻 Online</div>
           </div>
         </div>
-      </div>
-
-      <div class="type-help-label">What kind of help does your child need? <span>(tap all that apply)</span></div>
-      <div class="chips" id="chips">
-        <div class="chip active" data-type="">All types</div>
-        <div class="chip" data-type="Recurring Monthly">🔁 Recurring Monthly<small>Ongoing tuition</small></div>
-        <div class="chip" data-type="Admission Prep">🎓 Admission Prep<small>Getting into a school</small></div>
-        <div class="chip" data-type="Holiday Homework">📚 Holiday Homework<small>Break catch-up</small></div>
-        <div class="chip" data-type="Writing Improvement">✍️ Writing Improvement<small>Handwriting &amp; writing</small></div>
-        <div class="chip" data-type="Exam Prep">📝 Exam Prep<small>Board / school exams</small></div>
-        <div class="chip" data-type="Subject-Specific">📖 Subject-Specific<small>One subject only</small></div>
       </div>
     </div>
 
@@ -884,7 +996,7 @@ let activeTypes = [];
 let activeMode = "";
 
 function initials(name) { return name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase(); }
-function stampSVG() { return `<svg class="stamp" viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="none" stroke="#F2994A" stroke-width="2" stroke-dasharray="2 3"/><path d="M12 20 L17 26 L28 13" fill="none" stroke="#F2994A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>`; }
+function stampSVG() { return `<svg class="stamp" viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="none" stroke="#F2994A" stroke-width="2" stroke-dasharray="2 3"/><path class="stamp-check" d="M12 20 L17 26 L28 13" fill="none" stroke="#F2994A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>`; }
 function avatarInner(t) {
   if (t.photoUrl) return `<img src="${t.photoUrl}" alt="${t.name}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
   return initials(t.name);
@@ -921,8 +1033,22 @@ function waLink(phone, tutorName) {
 }
 
 const tutorsById = {};
+const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+// Results have arrived. If the centered loading pencil is still showing, let it
+// finish its stroke with a quick flourish before swapping in the real cards —
+// same feel as a teacher finishing a tick mark before moving to the next paper.
 function render(list, hasLocation) {
+  const loadingEl = grid.querySelector('.search-loading');
+  if (loadingEl && !prefersReducedMotion) {
+    loadingEl.classList.add('done');
+    setTimeout(() => renderResults(list, hasLocation), 220);
+  } else {
+    renderResults(list, hasLocation);
+  }
+}
+
+function renderResults(list, hasLocation) {
   const headingEl = document.getElementById('browse-heading');
   if (headingEl) headingEl.textContent = hasLocation ? 'Tutors near you' : 'All tutors';
 
@@ -948,6 +1074,7 @@ function render(list, hasLocation) {
   list.forEach((t, i) => {
     const card = document.createElement('div');
     card.className = 'card';
+    if (!prefersReducedMotion) card.style.setProperty('--stagger-delay', `${Math.min(i, 8) * 55}ms`);
     card.innerHTML = `
       <div class="avatar-wrap"><div class="avatar">${avatarInner(t)}</div>${stampSVG()}</div>
       <h3>${t.name}</h3>
@@ -1455,10 +1582,20 @@ function matchesSelectedTypes(t) {
   return activeTypes.some(ty => (t.types || []).includes(ty));
 }
 
+function showSearchLoading() {
+  if (!grid) return;
+  grid.innerHTML = `
+    <div class="search-loading">
+      <span class="search-loading-icon" aria-hidden="true">✏️</span>
+      <p>Finding tutors for you<span class="search-loading-dots"><span>.</span><span>.</span><span>.</span></span></p>
+    </div>`;
+}
+
 async function applyFilters() {
   const mode = activeMode;
   const hasLocation = hasLocationSelected();
 
+  showSearchLoading();
   const apiResult = await loadTutorsFromApi({ mode });
   if (apiResult) {
     render(applyDistanceSortAndFilter(apiResult.filter(matchesSelectedTypes)), hasLocation);
@@ -1499,6 +1636,87 @@ function initSearchLocalityAutocomplete() {
     document.getElementById('f-lng').value = '';
     document.getElementById('f-distance-wrap').style.display = 'none';
   });
+}
+
+function initSearchBarExtras() {
+  const input = document.getElementById('f-locality');
+  const clearBtn = document.getElementById('locality-clear-btn');
+  const useLocationBtn = document.getElementById('use-location-btn');
+  if (!input) return;
+
+  const updateClearBtn = () => {
+    if (clearBtn) clearBtn.style.display = input.value ? 'flex' : 'none';
+  };
+  updateClearBtn();
+  input.addEventListener('input', updateClearBtn);
+
+  // Enter key searches, same as tapping "Search tutors". The small delay lets
+  // the Google Places autocomplete's own place_changed handler (if a suggestion
+  // was highlighted) fill in lat/lng before we read the form.
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      setTimeout(() => { applyFilters(); scrollToResults(); }, 60);
+    }
+  });
+
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      input.value = '';
+      document.getElementById('f-lat').value = '';
+      document.getElementById('f-lng').value = '';
+      const distWrap = document.getElementById('f-distance-wrap');
+      if (distWrap) distWrap.style.display = 'none';
+      updateClearBtn();
+      input.focus();
+      applyFilters();
+    });
+  }
+
+  if (useLocationBtn) {
+    useLocationBtn.addEventListener('click', () => {
+      if (!navigator.geolocation) {
+        alert("Your browser doesn't support location access. Please type your locality instead.");
+        return;
+      }
+      const originalLabel = useLocationBtn.textContent;
+      useLocationBtn.disabled = true;
+      useLocationBtn.textContent = 'Finding you...';
+
+      const finish = (localityText) => {
+        input.value = localityText;
+        updateClearBtn();
+        useLocationBtn.disabled = false;
+        useLocationBtn.textContent = originalLabel;
+        applyFilters();
+        scrollToResults();
+      };
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          document.getElementById('f-lat').value = lat;
+          document.getElementById('f-lng').value = lng;
+          const distWrap = document.getElementById('f-distance-wrap');
+          if (distWrap) distWrap.style.display = 'block';
+
+          if (typeof google !== 'undefined' && google.maps && google.maps.Geocoder) {
+            new google.maps.Geocoder().geocode({ location: { lat, lng } }, (results, status) => {
+              finish(status === 'OK' && results[0] ? results[0].formatted_address : 'Your current location');
+            });
+          } else {
+            finish('Your current location');
+          }
+        },
+        () => {
+          useLocationBtn.disabled = false;
+          useLocationBtn.textContent = originalLabel;
+          alert("Couldn't access your location. Please allow location access, or type your locality above.");
+        },
+        { enableHighAccuracy: true, timeout: 8000 }
+      );
+    });
+  }
 }
 
 function initCustomSlider() {
@@ -1899,7 +2117,32 @@ function showListingSuccess() {
   `;
 }
 
+function closeMobileNav() {
+  const navLinks = document.getElementById('nav-links');
+  const navToggle = document.getElementById('nav-toggle');
+  if (navLinks) navLinks.classList.remove('open');
+  if (navToggle) { navToggle.classList.remove('open'); navToggle.setAttribute('aria-expanded', 'false'); }
+}
+
+function initMobileNav() {
+  const navToggle = document.getElementById('nav-toggle');
+  const navLinks = document.getElementById('nav-links');
+  if (!navToggle || !navLinks) return;
+  navToggle.addEventListener('click', () => {
+    const isOpen = navLinks.classList.toggle('open');
+    navToggle.classList.toggle('open', isOpen);
+    navToggle.setAttribute('aria-expanded', String(isOpen));
+  });
+  document.addEventListener('click', (e) => {
+    if (!navLinks.classList.contains('open')) return;
+    if (navLinks.contains(e.target) || navToggle.contains(e.target)) return;
+    closeMobileNav();
+  });
+}
+
 initSearchLocalityAutocomplete();
+initSearchBarExtras();
+initMobileNav();
 renderSearchPrompt();
 refreshTutorCountStat();
 

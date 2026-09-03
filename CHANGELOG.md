@@ -4,6 +4,11 @@ Running log of notable frontend changes and why they were made. Static HTML/CSS/
 
 ## 2026-09-03
 
+**Animate clear button and mobile nav dropdown; fix stuck-open nav on back nav** (`add9313`)
+- Locality clear (✕) button and mobile hamburger dropdown were both toggled with raw `style.display = 'none'/'flex'` in JS — can't be transitioned, so they popped in/out instantly.
+- Clear button now driven by a `.show` class with opacity+scale transition. Mobile nav dropdown now uses opacity+transform+visibility.
+- Fixed report of "go back and the dropdown is still there": bfcache restores the page in whatever transient DOM state it was frozen in, and scripts don't re-run on that kind of restore, so an open nav menu stayed open. Added a `pageshow` listener that calls `closeMobileNav()` on every show, bfcache included — same class of bug as the earlier page-fade bfcache fix.
+
 **Page-transition fade** (`0b59b86`, bfcache fix `a3141aa`)
 - Added shared `transitions.js`: fades the outgoing page out (~160ms) before navigating to another internal `.html` page, and fades each page in on load. Fixes hard instant page-swaps between `index.html` → `login.html`/`signup.html`/`dashboard.html` (the in-page modal/chip/hover interactions already animated smoothly; page-to-page navigation didn't).
 - Skips anchors (`#...`), external links, `target="_blank"`, downloads. Fully inert under `prefers-reduced-motion`.

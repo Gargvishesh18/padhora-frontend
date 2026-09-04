@@ -2,6 +2,18 @@
 
 Running log of notable frontend changes and why they were made. Static HTML/CSS/JS site, no build step. Pages: `index.html` (homepage), `login.html`, `signup.html`, `dashboard.html` (tutor-facing), `admin.html` (internal-only, not linked from public flow).
 
+## 2026-09-04
+
+**Phase 0 — launch-readiness cleanup: stop advertising things we don't have**
+- **Tutor count tile** (`index.html` trust bar): rendered a literal `–` on load, and `render()` overwrote it with the *filtered search result* count (including `0` on an empty search) — so the first number a parent saw was either a dash or a zero. Tile is now `hidden` by default and only `refreshTutorCountStat()` may unhide it, at `TUTOR_COUNT_STAT_MIN = 40`. Removed both stray writers in `render()`; a filtered result count was never the right value for "Tutors onboarded" anyway.
+- **"What parents say" section** deleted. It was an honest empty state, but a whole section whose message is "we have no reviews" is not something to lead a parent through.
+- **Star ratings removed from tutor cards and the profile modal.** `starString(t.rating || 0)` rendered `☆☆☆☆☆` on *every* listing — the backend has no `rating`, `reviews` or `testimonials` field at all (verified by grep across `padhora-backend/src`), so this was five empty stars, always. Dropped the rating row, the dead `testimonials` block in the modal, `starString()`, and the now-unused `.rating-row` / `.modal-reviews` / `.mini-review` CSS.
+- **Ratings FAQ** rewritten from future tense ("After a tuition period ends, parents can leave a rating…") to the present truth: we have no reviews yet and won't invent them — judge on the profile, the verification, and your own intro call.
+- **"Zero fees for parents"** card no longer mentions tutors boosting listings. Monetisation talk does not belong on the parent-facing page, and the leaning model is lead unlock, not paid placement.
+- **Tutor CTA** reframed from "List your tuition — it's free" (reads as free forever) to Founding-100 framing: free *during our launch phase*, and listing will never be the thing we charge for. Same note added to `signup.html`.
+- **Kept: the "My requests" nav link.** Read the flow before touching it — `openMyRequests()` is a real, working parent enquiry tracker (`/api/enquiries/track/{token}`, `/mine`, `/request-otp`, `/verify-otp`) with device-local tracking plus optional phone verification. Nothing placeholder about it.
+- **Trust bar mobile**: dropping to 3 items left a lone left-aligned item on the wrapped row. Centered the bar at ≤640px so both the 3-item and (future) 4-item states read as deliberate.
+
 ## 2026-09-03
 
 **Animate clear button and mobile nav dropdown; fix stuck-open nav on back nav** (`add9313`)

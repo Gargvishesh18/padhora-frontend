@@ -409,11 +409,6 @@
 
   .card h3 { font-family: 'Fredoka', sans-serif; font-size: 18px; font-weight: 700; margin-bottom: 4px; color: #F5F5F0; }
   .card .area { font-size: 13px; color: #C8D3CB; margin-bottom: 10px; }
-  .rating-row { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--slate); margin-bottom: 12px; }
-  .rating-row .stars { color: var(--coral); letter-spacing: 1px; }
-  .rating-row .rcount { font-family: 'Space Mono', monospace; font-size: 12px; }
-  .card .rating-row { color: #C8D3CB; }
-  .card .rating-row .stars { color: #F2C94C; }
   .tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
   .tag { font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: 999px; background: rgba(79,203,139,0.14); color: #2C8A5F; }
   .tag.mode-tag { background: rgba(46,109,164,0.12); color: var(--violet); }
@@ -582,9 +577,6 @@
   .modal .modal-bio { font-size: 14px; color: var(--slate); line-height: 1.6; margin: 14px 0; }
   .modal-video { position: relative; width: 100%; padding-top: 56.25%; border-radius: 14px; overflow: hidden; margin: 14px 0; background: #000; }
   .modal-video iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
-  .modal .modal-reviews { border-top: 1px dashed var(--line); padding-top: 16px; margin-top: 16px; }
-  .modal .modal-reviews h4 { font-family: 'Fredoka', sans-serif; font-size: 15px; margin-bottom: 10px; }
-  .mini-review { font-size: 13px; color: var(--slate); margin-bottom: 10px; padding-left: 12px; border-left: 3px solid var(--coral); }
   .modal-actions { display: flex; gap: 10px; margin-top: 22px; }
   .modal-actions .wa-btn { flex: 1; text-align: center; padding: 13px; }
 
@@ -642,6 +634,11 @@
     nav .nav-links a::after { display: none; }
     .nav-toggle { display: flex; }
     .search-card { flex-direction: column; }
+
+    /* With an odd number of trust items the last row holds a single item.
+       Centering keeps that read as deliberate instead of a ragged left edge. */
+    .trust-bar { gap: 22px 16px; justify-content: center; text-align: center; }
+    .trust-item { flex: 0 1 45%; }
 
     /* Compact, scannable layouts instead of tall stacked cards.
        Grid (not flex) so the icon spans two rows while title+description
@@ -810,7 +807,9 @@
     </div>
 
     <div class="trust-bar">
-      <div class="trust-item"><div class="trust-num" id="tutor-count-stat">–</div><div class="trust-label">Tutors onboarded</div></div>
+      <!-- Hidden until we have enough supply for the number to read as strength, not emptiness.
+           refreshTutorCountStat() is the only thing that may unhide it. -->
+      <div class="trust-item" id="tutor-count-item" hidden><div class="trust-num" id="tutor-count-stat"></div><div class="trust-label">Tutors onboarded</div></div>
       <div class="trust-item"><div class="trust-num">₹0</div><div class="trust-label">Fees for parents</div></div>
       <div class="trust-item"><div class="trust-num">💬</div><div class="trust-label">Direct WhatsApp, no middleman</div></div>
       <div class="trust-item"><div class="trust-num">📍</div><div class="trust-label">Piloting in Tricity</div></div>
@@ -896,7 +895,7 @@
           </svg>
         </div>
         <h3>Zero fees for parents</h3>
-        <p>We never charge parents to find or message tutors. We're exploring how tutors can optionally boost their listings (not a paywall) while keeping the core platform free.</p>
+        <p>We never charge parents to find or message tutors, and we don't take a cut of tuition fees. What you pay your tutor is between you and them.</p>
       </div>
     </div>
   </section>
@@ -938,25 +937,12 @@
     </div>
   </section>
 
-  <section class="section" id="testimonials">
-    <div class="section-head"><h2>What parents say</h2></div>
-    <div style="text-align: center; padding: 50px 20px; background: #F9F8FF; border-radius: 18px; border: 1.5px dashed var(--line);">
-      <svg viewBox="0 0 64 64" width="48" height="48" style="margin: 0 auto 16px; opacity: 0.5;">
-        <defs><linearGradient id="emptyTestiGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#F2994A"/><stop offset="100%" stop-color="#E36B8A"/></linearGradient></defs>
-        <path d="M32 6 C45 6 56 17 56 30 C56 43 45 54 32 54 C19 54 8 43 8 30 C8 17 19 6 32 6 Z" fill="url(#emptyTestiGrad)" opacity="0.1"/>
-        <path d="M28 32 L36 32 M32 28 L32 36" stroke="#2E6DA4" stroke-width="4" stroke-linecap="round"/>
-      </svg>
-      <h3 style="font-family: 'Fredoka', sans-serif; font-size: 18px; color: var(--ink); margin-bottom: 6px;">Parent reviews coming soon</h3>
-      <p style="font-size: 14px; color: var(--slate); max-width: 480px; margin: 0 auto;">Once tutors are live and parents book, real reviews will appear here. We'll never show fake testimonials — you'll only see genuine feedback from parents who've actually hired a tutor through Padhora.</p>
-    </div>
-  </section>
-
   <section class="section" id="faq">
     <div class="section-head"><h2>Before you message a tutor</h2></div>
     <div class="faq-list">
       <div class="faq-item"><button class="faq-q"><span class="faq-icon">✏️</span>What does "Verified" actually mean? <span class="faq-toggle">+</span></button><div class="faq-a">Every tutor's phone number and government ID are checked before their listing goes live. Always have an introductory call before the first session.</div></div>
       <div class="faq-item"><button class="faq-q"><span class="faq-icon">✏️</span>Is there a fee to contact a tutor? <span class="faq-toggle">+</span></button><div class="faq-a">No. Padhora doesn't charge parents or take a cut of tuition fees. You message tutors directly on WhatsApp.</div></div>
-      <div class="faq-item"><button class="faq-q"><span class="faq-icon">✏️</span>How are ratings collected? <span class="faq-toggle">+</span></button><div class="faq-a">After a tuition period ends, parents who connected through Padhora can leave a rating and short review, shown on the tutor's profile.</div></div>
+      <div class="faq-item"><button class="faq-q"><span class="faq-icon">✏️</span>Why don't I see ratings or reviews? <span class="faq-toggle">+</span></button><div class="faq-a">Because we don't have real ones yet. Padhora is new, and we'd rather show you nothing than invent testimonials. Judge a tutor on their profile, the verification we've done, and your own introductory call.</div></div>
     </div>
   </section>
 
@@ -974,8 +960,8 @@
         </svg>
         <div class="cta-eyebrow">FOR TUTORS</div>
         <h2>Teach at home? Get listed.</h2>
-        <p>List your services free and reach parents actively looking for exactly what you offer.</p>
-        <a href="signup.html">List your tuition — it's free</a>
+        <p>Our first 100 tutors are listed free during our launch phase, and reach parents actively looking for exactly what you offer. Listing will never be the thing we charge you for.</p>
+        <a href="signup.html">Join the Founding 100 — free</a>
       </div>
     </div>
   </section>
@@ -1019,7 +1005,6 @@ function youtubeEmbedUrl(url) {
   const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/);
   return match ? `https://www.youtube.com/embed/${match[1]}` : null;
 }
-function starString(rating) { const full = Math.round(rating); return '★'.repeat(full) + '☆'.repeat(5 - full); }
 
 function modesDisplay(t) {
   if (Array.isArray(t.modes)) return t.modes.join(', ');
@@ -1080,8 +1065,6 @@ function renderResults(list, hasLocation) {
         <p>${hasLocation ? 'Try a wider distance, a different filter, or removing a filter.' : 'Try different filters, or check back soon — we\'re onboarding new tutors.'}</p>
       </div>`;
     countEl.textContent = 'Beta: No tutors yet';
-    const statElEmpty = document.getElementById('tutor-count-stat');
-    if (statElEmpty) statElEmpty.textContent = '0';
     return;
   }
   list.forEach((t, i) => {
@@ -1092,7 +1075,6 @@ function renderResults(list, hasLocation) {
       <div class="avatar-wrap"><div class="avatar">${avatarInner(t)}</div>${stampSVG()}</div>
       <h3>${t.name}</h3>
       <div class="area">${t.locality ? t.locality + ', ' : ''}${t.area} · ${gradeDisplay(t)}${typeof t._distanceKm === 'number' ? ' · ' + t._distanceKm.toFixed(1) + ' km away' : ''}</div>
-      <div class="rating-row"><span class="stars">${starString(t.rating || 0)}</span> ${t.rating || ''} <span class="rcount">${t.reviews ? '(' + t.reviews + ' reviews)' : ''}</span></div>
       <div class="tag-row"><span class="tag mode-tag">${modesDisplay(t)}</span>${(t.types || []).map(ty => `<span class="tag">${ty}</span>`).join('')}</div>
       <div class="card-footer">
         <div class="price">${priceDisplay(t)}</div>
@@ -1103,8 +1085,6 @@ function renderResults(list, hasLocation) {
     grid.appendChild(card);
   });
   countEl.textContent = `${list.length} listed`;
-  const statEl = document.getElementById('tutor-count-stat');
-  if (statEl) statEl.textContent = list.length;
 }
 
 const allTypesChip = document.querySelector('.chip[data-type=""]');
@@ -1141,7 +1121,6 @@ const modalContent = document.getElementById('modal-content');
 function openModal(t) {
   trackAnalyticsEvent('PROFILE_VIEWED', t.id);
   const years = t.yearsExperience || t.years;
-  const testimonials = t.testimonials || [];
   const embedUrl = youtubeEmbedUrl(t.videoUrl);
   modalContent.innerHTML = `
     <button class="modal-close" onclick="closeModal()" aria-label="Close">×</button>
@@ -1152,12 +1131,10 @@ function openModal(t) {
     ${t.languages && t.languages.length ? `<div class="area">Teaches in: ${t.languages.join(', ')}</div>` : ''}
     ${t.batchType ? `<div class="area">${t.batchType}${t.trialAvailable ? ' · Trial class available' : ''}</div>` : ''}
     ${t.preferredTimings && t.preferredTimings.length ? `<div class="area">Available: ${t.preferredTimings.join(', ')}</div>` : ''}
-    <div class="rating-row"><span class="stars">${starString(t.rating || 0)}</span> ${t.rating || ''} <span class="rcount">${t.reviews ? '(' + t.reviews + ' reviews)' : ''}</span></div>
     <div class="tag-row"><span class="tag mode-tag">${modesDisplay(t)}</span>${(t.types || []).map(ty => `<span class="tag">${ty}</span>`).join('')}</div>
     <p class="modal-bio">${t.bio || ''}</p>
     ${embedUrl ? `<div class="modal-video"><iframe src="${embedUrl}" title="${t.name} intro video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>` : ''}
     <div class="price" style="margin: 10px 0;">${priceDisplay(t)}</div>
-    ${testimonials.length ? `<div class="modal-reviews"><h4>What parents say</h4>${testimonials.map(r => `<div class="mini-review">${r}</div>`).join('')}</div>` : ''}
     <div class="modal-actions">
       <button class="request-btn" style="flex:1;padding:13px;" onclick="openRequestForm(${t.id});">Request Tutor</button>
     </div>`;
@@ -1551,14 +1528,26 @@ function renderSearchPrompt() {
   countEl.textContent = 'Search to see tutors';
 }
 
+// Supply count is a trust signal only once there is real supply. Below the threshold we
+// show nothing at all rather than a dash, a zero, or a number that undersells us.
+const TUTOR_COUNT_STAT_MIN = 40;
+
 async function refreshTutorCountStat() {
+  const itemEl = document.getElementById('tutor-count-item');
   const statEl = document.getElementById('tutor-count-stat');
-  if (!statEl) return;
+  if (!itemEl || !statEl) return;
+  let count = 0;
   try {
     const apiResult = await loadTutorsFromApi({});
-    statEl.textContent = apiResult ? apiResult.length : tutors.length;
+    count = apiResult ? apiResult.length : tutors.length;
   } catch (e) {
-    statEl.textContent = tutors.length;
+    count = tutors.length;
+  }
+  if (count >= TUTOR_COUNT_STAT_MIN) {
+    statEl.textContent = count;
+    itemEl.hidden = false;
+  } else {
+    itemEl.hidden = true;
   }
 }
 

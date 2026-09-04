@@ -64,7 +64,11 @@
     animation: shine 5s linear infinite;
   }
   @keyframes shine { to { background-position: 200% center; } }
-  .card .desc { font-size: 13px; color: var(--slate); margin-bottom: 24px; }
+  .card .desc { font-size: 13px; color: var(--slate); margin-bottom: 14px; }
+  .card .founding-note {
+    font-size: 12.5px; line-height: 1.5; color: var(--violet); background: #F9F8FF;
+    border: 1px dashed var(--line); border-radius: 12px; padding: 10px 12px; margin-bottom: 22px;
+  }
   .field { margin-bottom: 16px; }
   .field label { display: block; font-size: 13px; font-weight: 700; color: var(--violet); margin-bottom: 6px; }
   .field input {
@@ -110,6 +114,7 @@
   <div class="card">
     <h1>Create your tutor account</h1>
     <div class="desc">Sign up, then fill in your profile — parents will see it once it's reviewed.</div>
+    <div class="founding-note">Our first 100 tutors are listed free during our launch phase. We'll never charge you simply for being on Padhora.</div>
     <form id="signup-form">
       <div class="field"><label>Email</label><input type="email" id="email" required autocomplete="email"></div>
       <div class="field"><label>Password</label><input type="password" id="password" required minlength="6" autocomplete="new-password" placeholder="At least 6 characters"></div>

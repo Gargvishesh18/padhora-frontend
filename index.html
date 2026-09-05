@@ -313,6 +313,20 @@
     background: var(--card); border-radius: 18px; border: 1.5px dashed var(--line);
   }
   .empty-state svg { margin-bottom: 14px; }
+  .empty-state-cta {
+    margin-top: 16px; background: var(--coral); color: white; border: none; font-weight: 700;
+    font-size: 13px; padding: 11px 22px; border-radius: 999px; cursor: pointer;
+  }
+  .requirement-cta-below {
+    margin-top: 22px; text-align: center; padding: 18px 20px; background: #F9F8FF;
+    border: 1.5px dashed var(--line); border-radius: 16px;
+  }
+  .requirement-cta-below p { font-size: 13.5px; color: var(--slate); margin-bottom: 10px; }
+  .requirement-cta-below button {
+    background: white; color: var(--violet); border: 1.5px solid var(--violet); font-weight: 700;
+    font-size: 13px; padding: 9px 20px; border-radius: 999px; cursor: pointer;
+  }
+  .requirement-cta-below button:hover { background: var(--violet); color: white; }
   .search-loading {
     grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; justify-content: center;
     padding: 60px 20px; text-align: center;
@@ -821,6 +835,10 @@
       <div class="count" id="result-count">Search to see tutors</div>
     </div>
     <div class="grid" id="tutor-grid"></div>
+    <div class="requirement-cta-below" id="requirement-cta-below" hidden>
+      <p>Didn't find the right fit?</p>
+      <button type="button" onclick="openRequirementForm()">Tell us what you need</button>
+    </div>
   </section>
 
   <section class="section" id="why">
@@ -969,6 +987,7 @@
   <div class="modal-backdrop" id="listing-backdrop"><div class="modal" id="listing-content"></div></div>
   <div class="modal-backdrop" id="request-backdrop"><div class="modal" id="request-content"></div></div>
   <div class="modal-backdrop" id="myrequests-backdrop"><div class="modal" id="myrequests-content"></div></div>
+  <div class="modal-backdrop" id="requirement-backdrop"><div class="modal" id="requirement-content"></div></div>
 
   <footer>
     <div class="footer-inner">
@@ -1062,8 +1081,10 @@ function renderResults(list, hasLocation) {
         </svg>
         <h3>${hasLocation ? 'No tutors near you yet' : 'No tutors match yet'}</h3>
         <p>${hasLocation ? 'Try a wider distance, a different filter, or removing a filter.' : 'Try different filters, or check back soon — we\'re onboarding new tutors.'}</p>
+        <button type="button" class="empty-state-cta" onclick="openRequirementForm()">Tell us what you need instead</button>
       </div>`;
     countEl.textContent = 'Beta: No tutors yet';
+    document.getElementById('requirement-cta-below')?.setAttribute('hidden', '');
     return;
   }
   list.forEach((t, i) => {
@@ -1084,6 +1105,7 @@ function renderResults(list, hasLocation) {
     grid.appendChild(card);
   });
   countEl.textContent = `${list.length} listed`;
+  document.getElementById('requirement-cta-below')?.removeAttribute('hidden');
 }
 
 const allTypesChip = document.querySelector('.chip[data-type=""]');
@@ -1300,6 +1322,107 @@ function friendlyErrorMessage(err) {
 }
 
 /* ============================================
+   REQUIREMENT FORM ("catch the parent when we have no tutor")
+   Shown when a search finds nothing, and as a smaller CTA below actual results for a
+   parent who didn't message anyone. No tutor is attached - POST /api/parent-requests
+   creates unmet demand for an admin to match by hand. See BACKLOG.md for the rationale.
+   Deliberately five fields only (phone, locality, class, subject, mode) - this is the one
+   other place on the site (besides Request Tutor) we ask a parent for anything.
+   ============================================ */
+const requirementBackdrop = document.getElementById('requirement-backdrop');
+const requirementContent = document.getElementById('requirement-content');
+function closeRequirementForm() { requirementBackdrop.classList.remove('open'); }
+requirementBackdrop.addEventListener('click', (e) => { if (e.target === requirementBackdrop) closeRequirementForm(); });
+
+function openRequirementForm() {
+  // Prefills from whatever the parent already told the main search, so this feels like
+  // "confirm", not "start from scratch" - same principle as openRequestForm().
+  const savedPhone = localStorage.getItem('padhora_parent_phone') || '';
+  const prefillLocality = document.getElementById('f-locality')?.value || '';
+  const prefillLat = document.getElementById('f-lat')?.value || '';
+  const prefillLng = document.getElementById('f-lng')?.value || '';
+  const prefillGrade = document.getElementById('f-grade')?.value || '';
+  const prefillSubject = document.getElementById('f-subject')?.value || '';
+
+  requirementContent.innerHTML = `
+    <button class="modal-close" onclick="closeRequirementForm()" aria-label="Close">×</button>
+    <h3>Tell us what you need</h3>
+    <p style="font-size:13px;color:var(--slate);margin:6px 0 18px;">We'll find you a tutor and message you on WhatsApp - usually within 48 hours.</p>
+    <form id="requirement-form">
+      <div class="form-field"><label>Your phone (WhatsApp)</label><input type="tel" id="rq-phone" value="${savedPhone}" required></div>
+      <div class="form-field"><label>Locality</label><input type="text" id="rq-locality" value="${prefillLocality}" placeholder="e.g. Phase 5, Mohali" required></div>
+      <div class="form-field">
+        <label>Class <span style="font-weight:400;color:var(--slate);">(optional)</span></label>
+        <select id="rq-grade"><option value="">Any class</option>${cachedGrades.map(g => `<option value="${g.slug}" ${g.slug === prefillGrade ? 'selected' : ''}>${g.name}</option>`).join('')}</select>
+      </div>
+      <div class="form-field">
+        <label>Subject <span style="font-weight:400;color:var(--slate);">(optional)</span></label>
+        <select id="rq-subject"><option value="">Any subject</option>${cachedSubjects.map(s => `<option value="${s.slug}" ${s.slug === prefillSubject ? 'selected' : ''}>${s.name}</option>`).join('')}</select>
+      </div>
+      <div class="form-field">
+        <label>Preferred mode <span style="font-weight:400;color:var(--slate);">(optional)</span></label>
+        <select id="rq-mode">
+          <option value="">Any mode</option>
+          <option>At tutor's home</option>
+          <option>Tutor comes to you</option>
+          <option>Online</option>
+        </select>
+      </div>
+      <input type="hidden" id="rq-lat" value="${prefillLat}">
+      <input type="hidden" id="rq-lng" value="${prefillLng}">
+      <button type="submit" class="submit-btn" id="rq-submit-btn">Send request</button>
+      <div class="save-msg" id="rq-error" style="color:var(--coral);"></div>
+    </form>`;
+
+  document.getElementById('requirement-form').addEventListener('submit', submitRequirementForm);
+  requirementBackdrop.classList.add('open');
+}
+
+async function submitRequirementForm(e) {
+  e.preventDefault();
+  const btn = document.getElementById('rq-submit-btn');
+  const errEl = document.getElementById('rq-error');
+  errEl.textContent = '';
+  btn.disabled = true; btn.textContent = 'Sending...';
+
+  const phone = document.getElementById('rq-phone').value.trim();
+  const lat = parseFloat(document.getElementById('rq-lat').value);
+  const lng = parseFloat(document.getElementById('rq-lng').value);
+  const body = {
+    phone,
+    locality: document.getElementById('rq-locality').value.trim(),
+    gradeSlug: document.getElementById('rq-grade').value || null,
+    subjectSlug: document.getElementById('rq-subject').value || null,
+    mode: document.getElementById('rq-mode').value || null,
+    latitude: isNaN(lat) ? null : lat,
+    longitude: isNaN(lng) ? null : lng,
+  };
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/parent-requests`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Could not send your request.');
+
+    localStorage.setItem('padhora_parent_phone', phone);
+    requirementContent.innerHTML = `
+      <button class="modal-close" onclick="closeRequirementForm()" aria-label="Close">×</button>
+      <div class="request-success-icon">✓</div>
+      <h3 style="text-align:center;">Got it.</h3>
+      <p style="font-size:13.5px;color:var(--slate);line-height:1.6;text-align:center;margin:10px 0 22px;">
+        We'll find you a tutor and message you on WhatsApp - usually within 48 hours.
+      </p>
+      <div class="modal-actions">
+        <button class="request-btn" style="flex:1;padding:13px;" onclick="closeRequirementForm()">Continue on Padhora</button>
+      </div>`;
+  } catch (err) {
+    errEl.textContent = friendlyErrorMessage(err);
+    btn.disabled = false; btn.textContent = 'Send request';
+  }
+}
+
+/* ============================================
    MY REQUESTS
    No login - identity is phone number, proven with a (currently stubbed) OTP.
    ============================================ */
@@ -1500,6 +1623,10 @@ async function loadTutorsFromApi(filters = {}) {
   }
 }
 
+// Cached so the requirement-form modal can reuse the same lists instead of re-fetching.
+let cachedGrades = [];
+let cachedSubjects = [];
+
 // Populates the Class and Subject dropdowns from the backend reference data. Falls back to
 // leaving just "Any class"/"Any subject" if the API is unreachable - search still works
 // without them, it just cannot filter by class/subject until this succeeds.
@@ -1510,6 +1637,8 @@ async function loadSearchReferenceData() {
       fetch(`${API_BASE_URL}/api/grades`).then(r => r.json()),
       fetch(`${API_BASE_URL}/api/subjects`).then(r => r.json())
     ]);
+    cachedGrades = grades;
+    cachedSubjects = subjects;
     const gradeEl = document.getElementById('f-grade');
     const subjectEl = document.getElementById('f-subject');
     if (gradeEl) grades.forEach(g => gradeEl.insertAdjacentHTML('beforeend', `<option value="${g.slug}">${g.name}</option>`));
@@ -1555,6 +1684,7 @@ function renderSearchPrompt() {
       <button onclick="focusLocalitySearch()" style="margin-top:14px;background:var(--coral);color:white;border:none;font-weight:700;font-size:13px;padding:10px 20px;border-radius:999px;cursor:pointer;">Search now</button>
     </div>`;
   countEl.textContent = 'Search to see tutors';
+  document.getElementById('requirement-cta-below')?.setAttribute('hidden', '');
 }
 
 // Supply count is a trust signal only once there is real supply. Below the threshold we

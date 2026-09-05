@@ -193,7 +193,21 @@
         </div>
 
         <div class="form-field">
-          <label>Classes & subjects</label>
+          <label>Classes you teach <span style="font-weight:400;color:var(--slate,#64748B);">(tap all that apply — this is what parents actually search by)</span></label>
+          <div class="checkbox-group" id="pf-grades">
+            <span style="font-size:12.5px;color:var(--slate,#64748B);">Loading…</span>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label>Subjects you teach <span style="font-weight:400;color:var(--slate,#64748B);">(tap all that apply)</span></label>
+          <div class="checkbox-group" id="pf-subjects">
+            <span style="font-size:12.5px;color:var(--slate,#64748B);">Loading…</span>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label>Classes & subjects — free text <span style="font-weight:400;color:var(--slate,#64748B);">(optional detail shown on your profile, e.g. exact syllabus or board)</span></label>
           <div id="grade-subject-rows"></div>
           <button type="button" class="add-row-btn" onclick="addGradeSubjectRow()">+ Add class/subject row</button>
         </div>
@@ -271,7 +285,45 @@ if (!token) window.location.href = 'login.html';
 
 let selectedModes = [], selectedTypes = [], selectedLanguages = [], selectedTimings = [];
 let selectedPriceType = '', selectedBatchType = '', selectedTrial = '';
+let selectedSubjectSlugs = [], selectedGradeSlugs = [];
 let gradeSubjectRowCount = 0;
+
+// Structured subjects/grades are what Phase 2 search actually filters on (see
+// GET /api/tutors?gradeSlug=&subjectSlug=). The free-text rows further down stay for extra
+// detail on the profile, but a tutor who only fills those in will not show up in a
+// class/subject search — so these two lists are loaded and rendered before loadProfile()
+// tries to pre-check them.
+async function loadSubjectAndGradeOptions() {
+  const gradesEl = document.getElementById('pf-grades');
+  const subjectsEl = document.getElementById('pf-subjects');
+  try {
+    const [grades, subjects] = await Promise.all([
+      fetch(`${API_BASE_URL}/api/grades`).then(r => r.json()),
+      fetch(`${API_BASE_URL}/api/subjects`).then(r => r.json())
+    ]);
+    gradesEl.innerHTML = grades.map(g => `<div class="chip" data-slug="${g.slug}">${g.name}</div>`).join('');
+    subjectsEl.innerHTML = subjects.map(s => `<div class="chip" data-slug="${s.slug}">${s.name}</div>`).join('');
+    gradesEl.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => toggleSlugChip(c, 'grades')));
+    subjectsEl.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => toggleSlugChip(c, 'subjects')));
+  } catch (err) {
+    // A tutor can still save the rest of their profile if this one fetch fails - they just
+    // won't be filterable by class/subject until they revisit this page.
+    gradesEl.innerHTML = `<span style="font-size:12.5px;color:var(--coral,#F2994A);">Couldn't load classes — refresh to try again.</span>`;
+    subjectsEl.innerHTML = `<span style="font-size:12.5px;color:var(--coral,#F2994A);">Couldn't load subjects — refresh to try again.</span>`;
+  }
+}
+
+function toggleSlugChip(el, group) {
+  el.classList.toggle('checked');
+  const slug = el.dataset.slug;
+  if (group === 'grades') {
+    selectedGradeSlugs = selectedGradeSlugs.includes(slug)
+      ? selectedGradeSlugs.filter(s => s !== slug) : [...selectedGradeSlugs, slug];
+  } else {
+    selectedSubjectSlugs = selectedSubjectSlugs.includes(slug)
+      ? selectedSubjectSlugs.filter(s => s !== slug) : [...selectedSubjectSlugs, slug];
+  }
+}
 
 function logout() {
   localStorage.removeItem('padhora_token');
@@ -342,6 +394,7 @@ function initLocalityAutocomplete() {
 window.onGoogleMapsReady = initLocalityAutocomplete;
 
 async function loadProfile() {
+  await loadSubjectAndGradeOptions();
   try {
     const res = await fetch(`${API_BASE_URL}/api/tutors/me`, { headers: { 'Authorization': 'Bearer ' + token } });
     if (res.status === 401) { logout(); return; }
@@ -390,6 +443,15 @@ async function loadProfile() {
       addGradeSubjectRow();
     }
 
+    (t.gradeSlugs || []).forEach(slug => {
+      selectedGradeSlugs.push(slug);
+      document.querySelector(`#pf-grades [data-slug="${slug}"]`)?.classList.add('checked');
+    });
+    (t.subjectSlugs || []).forEach(slug => {
+      selectedSubjectSlugs.push(slug);
+      document.querySelector(`#pf-subjects [data-slug="${slug}"]`)?.classList.add('checked');
+    });
+
     initLocalityAutocomplete();
   } catch (err) {
     document.getElementById('loading').textContent = "Couldn't load your profile. Try refreshing.";
@@ -421,6 +483,8 @@ document.getElementById('profile-form').addEventListener('submit', async (e) => 
     modes: selectedModes,
     types: selectedTypes,
     gradeSubjects,
+    gradeSlugs: selectedGradeSlugs,
+    subjectSlugs: selectedSubjectSlugs,
     qualification: document.getElementById('pf-qualification').value,
     languages: selectedLanguages,
     yearsExperience: parseInt(document.getElementById('pf-years').value) || null,

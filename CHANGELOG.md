@@ -2,6 +2,51 @@
 
 Running log of notable frontend changes and why they were made. Static HTML/CSS/JS site, no build step. Pages: `index.html` (homepage), `login.html`, `signup.html`, `dashboard.html` (tutor-facing), `admin.html` (internal-only, not linked from public flow).
 
+## 2026-09-05
+
+**Phase 2 (frontend): search by class and subject, backend-driven ranking**
+- Search order is now Locality -> radius -> Class -> Subject -> optional type/mode,
+  matching the roadmap. Class and Subject are `<select>` dropdowns populated from
+  `GET /api/grades` / `GET /api/subjects` - adding a subject going forward is a
+  database row, not a frontend deploy.
+- Replaced the 1-25 km drag slider with 2/5/10 km buttons, default 3 km (roadmap:
+  "not a 10 km slider"). None of the three buttons is pre-selected, since 3 km
+  itself isn't one of them - tapping an active button again returns to the 3 km
+  default instead of needing a separate reset control.
+- `applyFilters()` now sends `gradeSlug`, `subjectSlug`, and (once a locality is
+  picked) `lat`/`lng`/`radiusKm` to the backend, and renders whatever order comes
+  back rather than re-deriving it. The client-side haversine distance sort is
+  retired for the live-API path - it only remains as a fallback for the bundled
+  mock data when the backend is unreachable, since ranking now lives in exactly
+  one place (`TutorSearchService` in the backend), per the roadmap's "ranking is
+  fixed and published, never for sale."
+- `dashboard.html`: tutors now pick classes and subjects from real checkboxes
+  (backed by `/api/grades` and `/api/subjects`), not just free-text rows. The old
+  free-text fields stay for extra display detail (exact syllabus, board), but are
+  now clearly labelled as supplementary - the checkboxes are what search actually
+  filters on. A tutor onboarded through this form is immediately findable by
+  class/subject search; before this, only tutors from the Phase 1 backfill were.
+
+Verified against a live backend + Postgres, not just visually: dropdowns populate
+from the real API; a grade-filtered search returns only the matching tutor;
+default 3 km radius correctly excludes a 6.8 km-away tutor that a 10 km tap then
+includes; a tutor un-locatable on the map is excluded once a radius is applied;
+the dashboard save -> reload -> prefill round-trip preserves selected
+classes/subjects; a tutor onboarded via the dashboard form is searchable by
+class+subject immediately after admin approval.
+
+## 2026-09-04
+
+**Phase 0 — launch-readiness cleanup: stop advertising things we don't have**
+- **Tutor count tile** (`index.html` trust bar): rendered a literal `–` on load, and `render()` overwrote it with the *filtered search result* count (including `0` on an empty search) — so the first number a parent saw was either a dash or a zero. Tile is now `hidden` by default and only `refreshTutorCountStat()` may unhide it, at `TUTOR_COUNT_STAT_MIN = 40`. Removed both stray writers in `render()`; a filtered result count was never the right value for "Tutors onboarded" anyway.
+- **"What parents say" section** deleted. It was an honest empty state, but a whole section whose message is "we have no reviews" is not something to lead a parent through.
+- **Star ratings removed from tutor cards and the profile modal.** `starString(t.rating || 0)` rendered `☆☆☆☆☆` on *every* listing — the backend has no `rating`, `reviews` or `testimonials` field at all (verified by grep across `padhora-backend/src`), so this was five empty stars, always. Dropped the rating row, the dead `testimonials` block in the modal, `starString()`, and the now-unused `.rating-row` / `.modal-reviews` / `.mini-review` CSS.
+- **Ratings FAQ** rewritten from future tense ("After a tuition period ends, parents can leave a rating…") to the present truth: we have no reviews yet and won't invent them — judge on the profile, the verification, and your own intro call.
+- **"Zero fees for parents"** card no longer mentions tutors boosting listings. Monetisation talk does not belong on the parent-facing page, and the leaning model is lead unlock, not paid placement.
+- **Tutor CTA** reframed from "List your tuition — it's free" (reads as free forever) to Founding-100 framing: free *during our launch phase*, and listing will never be the thing we charge for. Same note added to `signup.html`.
+- **Kept: the "My requests" nav link.** Read the flow before touching it — `openMyRequests()` is a real, working parent enquiry tracker (`/api/enquiries/track/{token}`, `/mine`, `/request-otp`, `/verify-otp`) with device-local tracking plus optional phone verification. Nothing placeholder about it.
+- **Trust bar mobile**: dropping to 3 items left a lone left-aligned item on the wrapped row. Centered the bar at ≤640px so both the 3-item and (future) 4-item states read as deliberate.
+
 ## 2026-09-03
 
 **Animate clear button and mobile nav dropdown; fix stuck-open nav on back nav** (`add9313`)

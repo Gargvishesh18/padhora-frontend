@@ -2,6 +2,36 @@
 
 Running log of notable frontend changes and why they were made. Static HTML/CSS/JS site, no build step. Pages: `index.html` (homepage), `login.html`, `signup.html`, `dashboard.html` (tutor-facing), `admin.html` (internal-only, not linked from public flow).
 
+## 2026-09-05 (2)
+
+**Phase 3 (partial): requirement form — "catch the parent when we have no tutor"**
+- Ships the entry parked in `BACKLOG.md` (now removed — see there for the original
+  reasoning). At current tutor supply, a parent who searches and finds nothing was
+  simply leaving; we learned nothing about who they were or what they needed.
+- New modal (`openRequirementForm()` / `#requirement-backdrop`) with five fields:
+  phone (required), locality (required, prefilled from the search box), class,
+  subject, mode (all optional — a parent who doesn't know the exact class yet
+  shouldn't be blocked from submitting). Posts to `POST /api/parent-requests`,
+  which has no tutor attached by design — that's unmet demand for an admin to
+  match by hand, not another enquiry.
+- Two entry points: a prominent CTA inside the empty-results state (replacing
+  "try different filters" as a dead end), and a smaller "Didn't find the right
+  fit?" banner below actual results — shown only once real results exist, hidden
+  on the pre-search prompt and on the empty state (which has its own CTA).
+- Copy makes a concrete promise ("we'll find you a tutor and message you on
+  WhatsApp — usually within 48 hours"), not "thanks for your interest."
+- No OTP or login required to submit — matches the existing Request Tutor flow's
+  stance that submitting is low-risk; friction is reserved for looking your own
+  requests back up later (not built here, to keep this addition small).
+
+Verified against a live backend: empty-state CTA opens the modal with the grade
+filter and locality carried over from the search that just ran; the below-results
+banner is correctly hidden pre-search and on the empty state, visible only once
+there are real results; a full round trip (submit → 201 → success screen) persists
+the right fields, including geolocation lat/lng silently carried through from the
+search box when the parent had used it. Checked at 375px — no overflow, matches
+the existing modal system's mobile behaviour.
+
 ## 2026-09-05
 
 **Phase 2 (frontend): search by class and subject, backend-driven ranking**

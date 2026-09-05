@@ -2,6 +2,39 @@
 
 Running log of notable frontend changes and why they were made. Static HTML/CSS/JS site, no build step. Pages: `index.html` (homepage), `login.html`, `signup.html`, `dashboard.html` (tutor-facing), `admin.html` (internal-only, not linked from public flow).
 
+## 2026-09-05
+
+**Phase 2 (frontend): search by class and subject, backend-driven ranking**
+- Search order is now Locality -> radius -> Class -> Subject -> optional type/mode,
+  matching the roadmap. Class and Subject are `<select>` dropdowns populated from
+  `GET /api/grades` / `GET /api/subjects` - adding a subject going forward is a
+  database row, not a frontend deploy.
+- Replaced the 1-25 km drag slider with 2/5/10 km buttons, default 3 km (roadmap:
+  "not a 10 km slider"). None of the three buttons is pre-selected, since 3 km
+  itself isn't one of them - tapping an active button again returns to the 3 km
+  default instead of needing a separate reset control.
+- `applyFilters()` now sends `gradeSlug`, `subjectSlug`, and (once a locality is
+  picked) `lat`/`lng`/`radiusKm` to the backend, and renders whatever order comes
+  back rather than re-deriving it. The client-side haversine distance sort is
+  retired for the live-API path - it only remains as a fallback for the bundled
+  mock data when the backend is unreachable, since ranking now lives in exactly
+  one place (`TutorSearchService` in the backend), per the roadmap's "ranking is
+  fixed and published, never for sale."
+- `dashboard.html`: tutors now pick classes and subjects from real checkboxes
+  (backed by `/api/grades` and `/api/subjects`), not just free-text rows. The old
+  free-text fields stay for extra display detail (exact syllabus, board), but are
+  now clearly labelled as supplementary - the checkboxes are what search actually
+  filters on. A tutor onboarded through this form is immediately findable by
+  class/subject search; before this, only tutors from the Phase 1 backfill were.
+
+Verified against a live backend + Postgres, not just visually: dropdowns populate
+from the real API; a grade-filtered search returns only the matching tutor;
+default 3 km radius correctly excludes a 6.8 km-away tutor that a 10 km tap then
+includes; a tutor un-locatable on the map is excluded once a radius is applied;
+the dashboard save -> reload -> prefill round-trip preserves selected
+classes/subjects; a tutor onboarded via the dashboard form is searchable by
+class+subject immediately after admin approval.
+
 ## 2026-09-04
 
 **Phase 0 — launch-readiness cleanup: stop advertising things we don't have**

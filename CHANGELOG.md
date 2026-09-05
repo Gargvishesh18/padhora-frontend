@@ -2,6 +2,28 @@
 
 Running log of notable frontend changes and why they were made. Static HTML/CSS/JS site, no build step. Pages: `index.html` (homepage), `login.html`, `signup.html`, `dashboard.html` (tutor-facing), `admin.html` (internal-only, not linked from public flow).
 
+## 2026-09-05 (3)
+
+**Phase 4 (partial): phone + OTP as the default tutor signup/login**
+- `signup.html` and `login.html` gain a Phone / Email tab, Phone first per the
+  roadmap's phone-as-default leaning. Phone flow: enter number → "Send code" →
+  4-digit code → verified straight into `dashboard.html`, same as the existing
+  email path (same `padhora_token`/`padhora_tutor_id` localStorage, same
+  redirect). Email tab is untouched — existing accounts keep working exactly
+  as before, no migration prompt, since there's no real tutor supply yet to
+  migrate.
+- Dev-mode OTP is shown inline (`Dev mode... your code is 1234`) exactly like
+  the existing parent "My Requests" OTP flow in `index.html`, until a real SMS
+  provider is wired up server-side (stays in `PADHORA_OTP_STUB_MODE`).
+- Both pages reuse `POST /api/auth/phone/request-otp` / `/verify-otp`, which
+  find-or-create a tutor by phone — verifying the same number twice logs back
+  into the same account rather than creating a duplicate.
+
+Verified against a live backend: full phone signup → dashboard round trip;
+re-verifying the same phone number returns to the same tutor id, not a new
+one; email tab signup still works unaffected on the same page; screenshotted
+at 420px (phone form factor this page is mostly used at).
+
 ## 2026-09-05 (2)
 
 **Phase 3 (partial): requirement form — "catch the parent when we have no tutor"**

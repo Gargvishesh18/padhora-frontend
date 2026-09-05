@@ -87,6 +87,22 @@
   .switch { text-align: center; font-size: 13px; color: var(--slate); margin-top: 18px; }
   .switch a { color: var(--violet); font-weight: 700; text-decoration: none; }
   .switch a:hover { text-decoration: underline; }
+
+  /* Phone is the default tab per the product's phone-first direction; email stays available
+     as a secondary path (see AuthController - both issue the same kind of session). */
+  .auth-tabs { display: flex; gap: 6px; background: #F3F1FA; border-radius: 12px; padding: 4px; margin-bottom: 20px; }
+  .auth-tab {
+    flex: 1; text-align: center; padding: 9px 0; border-radius: 9px; cursor: pointer;
+    font-size: 13.5px; font-weight: 700; color: var(--slate); transition: background 0.15s ease, color 0.15s ease;
+  }
+  .auth-tab.active { background: white; color: var(--violet); box-shadow: 0 2px 6px rgba(46,109,164,0.15); }
+  .otp-dev-hint {
+    font-size: 12px; background: #F9F8FF; border: 1px dashed var(--line); border-radius: 10px;
+    padding: 8px 12px; color: var(--violet); margin-bottom: 14px;
+  }
+  .otp-switch-number { text-align: center; margin-top: 12px; }
+  .otp-switch-number a { font-size: 12.5px; color: var(--slate); text-decoration: none; }
+  .otp-switch-number a:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -115,17 +131,110 @@
     <h1>Create your tutor account</h1>
     <div class="desc">Sign up, then fill in your profile — parents will see it once it's reviewed.</div>
     <div class="founding-note">Our first 100 tutors are listed free during our launch phase. We'll never charge you simply for being on Padhora.</div>
-    <form id="signup-form">
-      <div class="field"><label>Email</label><input type="email" id="email" required autocomplete="email"></div>
-      <div class="field"><label>Password</label><input type="password" id="password" required minlength="6" autocomplete="new-password" placeholder="At least 6 characters"></div>
-      <div id="error" class="error"></div>
-      <button type="submit" class="submit-btn" id="submit-btn">Sign up</button>
-    </form>
+
+    <div class="auth-tabs">
+      <div class="auth-tab active" id="tab-phone" onclick="switchAuthTab('phone')">Phone</div>
+      <div class="auth-tab" id="tab-email" onclick="switchAuthTab('email')">Email</div>
+    </div>
+
+    <div id="phone-panel">
+      <form id="phone-request-form">
+        <div class="field"><label>Phone number</label><input type="tel" id="signup-phone" required autocomplete="tel" placeholder="10-digit mobile number"></div>
+        <div id="phone-error" class="error"></div>
+        <button type="submit" class="submit-btn" id="phone-request-btn">Send code</button>
+      </form>
+      <form id="phone-verify-form" style="display:none;">
+        <div id="otp-dev-hint" class="otp-dev-hint" style="display:none;"></div>
+        <div class="field"><label>4-digit code</label><input type="tel" id="signup-otp" maxlength="4" required placeholder="0000"></div>
+        <div id="verify-error" class="error"></div>
+        <button type="submit" class="submit-btn" id="phone-verify-btn">Verify &amp; continue</button>
+        <div class="otp-switch-number"><a href="javascript:void(0)" onclick="backToPhoneEntry()">Use a different number</a></div>
+      </form>
+    </div>
+
+    <div id="email-panel" style="display:none;">
+      <form id="signup-form">
+        <div class="field"><label>Email</label><input type="email" id="email" required autocomplete="email"></div>
+        <div class="field"><label>Password</label><input type="password" id="password" required minlength="6" autocomplete="new-password" placeholder="At least 6 characters"></div>
+        <div id="error" class="error"></div>
+        <button type="submit" class="submit-btn" id="submit-btn">Sign up</button>
+      </form>
+    </div>
+
     <div class="switch">Already have an account? <a href="login.html">Log in</a></div>
   </div>
 </div>
 <script>
 const API_BASE_URL = "https://padhora-backend-production.up.railway.app";
+
+function switchAuthTab(which) {
+  document.getElementById('tab-phone').classList.toggle('active', which === 'phone');
+  document.getElementById('tab-email').classList.toggle('active', which === 'email');
+  document.getElementById('phone-panel').style.display = which === 'phone' ? 'block' : 'none';
+  document.getElementById('email-panel').style.display = which === 'email' ? 'block' : 'none';
+}
+
+function backToPhoneEntry() {
+  document.getElementById('phone-verify-form').style.display = 'none';
+  document.getElementById('phone-request-form').style.display = 'block';
+  document.getElementById('verify-error').style.display = 'none';
+}
+
+document.getElementById('phone-request-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const errorEl = document.getElementById('phone-error');
+  const btn = document.getElementById('phone-request-btn');
+  errorEl.style.display = 'none';
+  btn.disabled = true; btn.textContent = 'Sending...';
+  try {
+    const phone = document.getElementById('signup-phone').value.trim();
+    const res = await fetch(`${API_BASE_URL}/api/auth/phone/request-otp`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Could not send code.');
+    const hint = document.getElementById('otp-dev-hint');
+    if (data.devOtp) {
+      hint.style.display = 'block';
+      hint.textContent = `Dev mode (no SMS provider connected yet): your code is ${data.devOtp}`;
+    } else {
+      hint.style.display = 'none';
+    }
+    document.getElementById('phone-request-form').style.display = 'none';
+    document.getElementById('phone-verify-form').style.display = 'block';
+    document.getElementById('signup-otp').focus();
+  } catch (err) {
+    errorEl.textContent = err.message;
+    errorEl.style.display = 'block';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Send code';
+  }
+});
+
+document.getElementById('phone-verify-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const errorEl = document.getElementById('verify-error');
+  const btn = document.getElementById('phone-verify-btn');
+  errorEl.style.display = 'none';
+  btn.disabled = true; btn.textContent = 'Verifying...';
+  try {
+    const phone = document.getElementById('signup-phone').value.trim();
+    const code = document.getElementById('signup-otp').value.trim();
+    const res = await fetch(`${API_BASE_URL}/api/auth/phone/verify-otp`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone, code })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Incorrect code.');
+    localStorage.setItem('padhora_token', data.token);
+    localStorage.setItem('padhora_tutor_id', data.tutorId);
+    window.location.href = 'dashboard.html';
+  } catch (err) {
+    errorEl.textContent = err.message;
+    errorEl.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Verify & continue';
+  }
+});
+
 document.getElementById('signup-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const errorEl = document.getElementById('error');
